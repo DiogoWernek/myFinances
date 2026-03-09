@@ -6,9 +6,21 @@ import { LayoutDashboard } from 'lucide-react';
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+
+  React.useEffect(() => {
+    const savedEmail = localStorage.getItem('savedEmail');
+    const savedPassword = localStorage.getItem('savedPassword');
+    
+    if (savedEmail && savedPassword) {
+      setEmail(savedEmail);
+      setPassword(savedPassword);
+      setRememberMe(true);
+    }
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,6 +36,13 @@ const Login: React.FC = () => {
       setError(error.message);
       setLoading(false);
     } else {
+      if (rememberMe) {
+        localStorage.setItem('savedEmail', email);
+        localStorage.setItem('savedPassword', password);
+      } else {
+        localStorage.removeItem('savedEmail');
+        localStorage.removeItem('savedPassword');
+      }
       navigate('/');
     }
   };
@@ -75,6 +94,20 @@ const Login: React.FC = () => {
             />
           </div>
           
+          <div className="flex items-center">
+            <input
+              id="remember-me"
+              name="remember-me"
+              type="checkbox"
+              className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded cursor-pointer"
+              checked={rememberMe}
+              onChange={(e) => setRememberMe(e.target.checked)}
+            />
+            <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900 cursor-pointer select-none">
+              Lembre de mim
+            </label>
+          </div>
+
           <button
             className="w-full bg-primary-600 hover:bg-primary-700 text-white font-semibold py-2.5 rounded-lg transition-colors duration-200 shadow-sm hover:shadow active:scale-[0.98]"
             type="submit"
