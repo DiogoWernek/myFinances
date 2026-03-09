@@ -1,0 +1,75 @@
+-- Habilita a extensão para gerar UUIDs (caso ainda não esteja habilitada)
+create extension if not exists "uuid-ossp";
+
+-- Criação da tabela de despesas
+create table if not exists expenses (
+  id uuid default uuid_generate_v4() primary key,
+  user_id uuid references auth.users(id) not null,
+  description text not null,
+  amount numeric(10, 2) not null,
+  category text,
+  date date not null,
+  month integer not null,
+  year integer not null,
+  installment_id uuid, -- ID para agrupar parcelas de uma mesma despesa
+  created_at timestamp with time zone default now(),
+  updated_at timestamp with time zone default now()
+);
+
+-- Índices para performance em despesas
+create index if not exists idx_expenses_user_id on expenses(user_id);
+create index if not exists idx_expenses_user_year_month on expenses(user_id, year, month);
+create index if not exists idx_expenses_installment_id on expenses(installment_id);
+
+-- Habilitar RLS (Row Level Security) para despesas
+alter table expenses enable row level security;
+
+-- Políticas de segurança para despesas
+create policy "Usuários podem ver apenas suas próprias despesas"
+  on expenses for select
+  using (auth.uid() = user_id);
+
+create policy "Usuários podem criar despesas para si mesmos"
+  on expenses for insert
+  with check (auth.uid() = user_id);
+
+create policy "Usuários podem atualizar suas próprias despesas"
+  on expenses for update
+  using (auth.uid() = user_id);
+
+create policy "Usuários podem excluir suas próprias despesas"
+  on expenses for delete
+  using (auth.uid() = user_id);
+
+
+-- Criação da tabela de configurações do usuário
+create table if not exists user_settings (
+  id uuid default uuid_generate_v4() primary key,
+  user_id uuid references auth.users(id) not null,
+  salary numeric(10, 2) default 0,
+  created_at timestamp with time zone default now(),
+  updated_at timestamp with time zone default now()
+);
+
+-- Índices para performance em configurações
+create index if not exists idx_user_settings_user_id on user_settings(user_id);
+
+-- Habilitar RLS (Row Level Security) para configurações
+alter table user_settings enable row level security;
+
+-- Políticas de segurança para configurações
+create policy "Usuários podem ver apenas suas próprias configurações"
+  on user_settings for select
+  using (auth.uid() = user_id);
+
+create policy "Usuários podem criar suas próprias configurações"
+  on user_settings for insert
+  with check (auth.uid() = user_id);
+
+create policy "Usuários podem atualizar suas próprias configurações"
+  on user_settings for update
+  using (auth.uid() = user_id);
+
+create policy "Usuários podem excluir suas próprias configurações"
+  on user_settings for delete
+  using (auth.uid() = user_id);
