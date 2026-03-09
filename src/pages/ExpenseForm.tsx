@@ -3,7 +3,7 @@ import { useNavigate, useParams, Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import { useExpenses } from '../context/ExpensesContext';
-import { CATEGORIES } from '../constants';
+import { CATEGORIES, PAYMENT_METHODS } from '../constants';
 import { format, addMonths } from 'date-fns';
 import { ArrowLeft, Settings, X } from 'lucide-react';
 import { formatCurrencyInput, parseCurrency } from '../lib/format';
@@ -16,6 +16,7 @@ const ExpenseForm: React.FC = () => {
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
   const [category, setCategory] = useState(CATEGORIES[0]);
+  const [paymentMethod, setPaymentMethod] = useState(PAYMENT_METHODS[0].value);
   const [date, setDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [installments, setInstallments] = useState(1);
   const [showCustomInstallments, setShowCustomInstallments] = useState(false);
@@ -44,6 +45,7 @@ const ExpenseForm: React.FC = () => {
       setDescription(data.description);
       setAmount(data.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
       setCategory(data.category || CATEGORIES[0]);
+      setPaymentMethod(data.payment_method || PAYMENT_METHODS[0].value);
       setDate(data.date);
     }
     setLoading(false);
@@ -67,6 +69,7 @@ const ExpenseForm: React.FC = () => {
           description,
           amount: baseAmount,
           category,
+          payment_method: paymentMethod,
           date,
           month: new Date(date).getMonth() + 1,
           year: new Date(date).getFullYear(),
@@ -99,6 +102,7 @@ const ExpenseForm: React.FC = () => {
             description: currentDescription,
             amount: installmentAmount,
             category,
+            payment_method: paymentMethod,
             date: format(currentInstallmentDate, 'yyyy-MM-dd'),
             month: currentInstallmentDate.getMonth() + 1,
             year: currentInstallmentDate.getFullYear(),
@@ -219,12 +223,32 @@ const ExpenseForm: React.FC = () => {
                 </select>
               </div>
 
-              {!id && (
-                <div>
-                  <div className="flex justify-between items-center mb-2">
-                    <label className="block text-sm font-medium text-gray-700" htmlFor="installments">
-                      Parcelas
-                    </label>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="paymentMethod">
+                  Método de Pagamento
+                </label>
+                <select
+                  className="w-full px-4 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all appearance-none"
+                  id="paymentMethod"
+                  value={paymentMethod}
+                  onChange={(e) => setPaymentMethod(e.target.value)}
+                >
+                  {PAYMENT_METHODS.map((method) => (
+                    <option key={method.value} value={method.value}>
+                      {method.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            
+            <div>
+            {!id && (
+              <div>
+                <div className="flex justify-between items-center mb-2">
+                  <label className="block text-sm font-medium text-gray-700" htmlFor="installments">
+                    Parcelas
+                  </label>
                     <button
                       type="button"
                       onClick={() => {

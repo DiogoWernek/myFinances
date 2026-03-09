@@ -7,6 +7,7 @@ export interface Expense {
   date: string;
   month: number;
   year: number;
+  payment_method?: string;
   installment_id?: string;
   created_at: string;
   updated_at: string;

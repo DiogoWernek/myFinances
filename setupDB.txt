@@ -8,6 +8,7 @@ create table if not exists expenses (
   description text not null,
   amount numeric(10, 2) not null,
   category text,
+  payment_method text default 'credit',
   date date not null,
   month integer not null,
   year integer not null,

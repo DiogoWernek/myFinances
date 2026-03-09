@@ -8,7 +8,7 @@ import { formatCurrency } from '../lib/format';
 import { Link } from 'react-router-dom';
 import { Plus, Edit2, Trash2, LogOut, ChevronLeft, ChevronRight, TrendingDown, PieChart, Settings, Wallet, RefreshCcw, Search, Filter } from 'lucide-react';
 import { PieChart as RePieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
-import { COLORS, CATEGORIES } from '../constants';
+import { COLORS, CATEGORIES, PAYMENT_METHODS } from '../constants';
 import SettingsModal from '../components/SettingsModal';
 import SavingsModal from '../components/SavingsModal';
 
@@ -312,7 +312,14 @@ const Dashboard: React.FC = () => {
                     </span>
                   </div>
                   <div className="min-w-0">
-                    <p className="font-semibold text-gray-900 truncate">{expense.description}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="font-semibold text-gray-900 truncate">{expense.description}</p>
+                      {expense.payment_method && (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                          {PAYMENT_METHODS.find(m => m.value === expense.payment_method)?.label || expense.payment_method}
+                        </span>
+                      )}
+                    </div>
                     <p className="text-sm text-gray-500 truncate">{expense.category || 'Sem categoria'}</p>
                   </div>
                 </div>
