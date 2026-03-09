@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useUserSettings } from '../context/UserSettingsContext';
 import { X, TrendingUp, AlertTriangle, Settings } from 'lucide-react';
+import { formatCurrency } from '../lib/format';
 
 interface SavingsModalProps {
   isOpen: boolean;
@@ -82,7 +83,7 @@ const SavingsModal: React.FC<SavingsModalProps> = ({ isOpen, onClose, totalExpen
             <>
               <p className="text-gray-500 mb-2 font-medium">Seu resultado este mês</p>
               <div className={`text-4xl font-bold mb-6 tracking-tight ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
-                {savings.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                {formatCurrency(savings)}
               </div>
               
               <div className={`p-4 rounded-xl mb-6 ${isPositive ? 'bg-green-50 border border-green-100' : 'bg-red-50 border border-red-100'}`}>
@@ -95,7 +96,7 @@ const SavingsModal: React.FC<SavingsModalProps> = ({ isOpen, onClose, totalExpen
                 <div>
                   <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">Salário</p>
                   <p className="text-gray-900 font-semibold">
-                    {(salary || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                    {formatCurrency(salary || 0)}
                   </p>
                 </div>
                 <div>

@@ -6,6 +6,7 @@ import { useExpenses } from '../context/ExpensesContext';
 import { CATEGORIES } from '../constants';
 import { format, addMonths } from 'date-fns';
 import { ArrowLeft, Settings, X } from 'lucide-react';
+import { formatCurrencyInput, parseCurrency } from '../lib/format';
 
 const ExpenseForm: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -17,8 +18,8 @@ const ExpenseForm: React.FC = () => {
   const [category, setCategory] = useState(CATEGORIES[0]);
   const [date, setDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [installments, setInstallments] = useState(1);
-  const [currentInstallment, setCurrentInstallment] = useState(1);
   const [showCustomInstallments, setShowCustomInstallments] = useState(false);
+  const [payNextMonth, setPayNextMonth] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -41,7 +42,7 @@ const ExpenseForm: React.FC = () => {
       setError('Erro ao carregar despesa.');
     } else if (data) {
       setDescription(data.description);
-      setAmount(data.amount.toString());
+      setAmount(data.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
       setCategory(data.category || CATEGORIES[0]);
       setDate(data.date);
     }
@@ -55,7 +56,7 @@ const ExpenseForm: React.FC = () => {
     setLoading(true);
     setError(null);
 
-    const baseAmount = parseFloat(amount);
+    const baseAmount = parseCurrency(amount);
     const installmentAmount = installments > 1 ? baseAmount / installments : baseAmount;
 
     try {
@@ -83,9 +84,8 @@ const ExpenseForm: React.FC = () => {
         // Create mode - handle installments
         const expensesToInsert = [];
         // Calculate the base date (date of the 1st installment)
-        // If currentInstallment is 1, baseDate is just date
-        // If currentInstallment is 6, baseDate is date - 5 months
-        const baseDate = addMonths(new Date(date), -(currentInstallment - 1));
+        // If payNextMonth is true, start from next month
+        const baseDate = payNextMonth ? addMonths(new Date(date), 1) : new Date(date);
         const installmentId = crypto.randomUUID();
 
         for (let i = 0; i < installments; i++) {
@@ -169,18 +169,20 @@ const ExpenseForm: React.FC = () => {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="amount">
-                  Valor Total (R$)
+                  Valor
                 </label>
-                <input
-                  className="w-full px-4 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all placeholder-gray-400"
-                  id="amount"
-                  type="number"
-                  step="0.01"
-                  placeholder="0.00"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  required
-                />
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium">R$</span>
+                  <input
+                    className="w-full pl-11 pr-4 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all"
+                    id="amount"
+                    type="text"
+                    placeholder="0,00"
+                    value={amount}
+                    onChange={(e) => setAmount(formatCurrencyInput(e.target.value))}
+                    required
+                  />
+                </div>
               </div>
 
               <div>
@@ -230,9 +232,6 @@ const ExpenseForm: React.FC = () => {
                         if (!showCustomInstallments) {
                           // When opening custom mode, ensure we have valid values
                           if (installments === 1) setInstallments(2);
-                        } else {
-                          // When closing, reset current installment to 1
-                          setCurrentInstallment(1);
                         }
                       }}
                       className="text-xs text-primary-600 hover:text-primary-700 font-medium flex items-center gap-1"
@@ -250,21 +249,7 @@ const ExpenseForm: React.FC = () => {
                   </div>
 
                   {showCustomInstallments ? (
-                    <div className="grid grid-cols-2 gap-3 bg-gray-50 p-3 rounded-lg border border-gray-200">
-                      <div>
-                        <label className="block text-xs text-gray-500 mb-1 font-medium">Parcela Atual</label>
-                        <input
-                          type="number"
-                          min="1"
-                          max={installments}
-                          value={currentInstallment}
-                          onChange={(e) => {
-                            const val = parseInt(e.target.value) || 1;
-                            setCurrentInstallment(Math.min(val, installments));
-                          }}
-                          className="w-full px-3 py-2 rounded-md border border-gray-300 text-sm focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
-                        />
-                      </div>
+                    <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
                       <div>
                         <label className="block text-xs text-gray-500 mb-1 font-medium">Total de Parcelas</label>
                         <input
@@ -274,7 +259,6 @@ const ExpenseForm: React.FC = () => {
                           onChange={(e) => {
                             const val = parseInt(e.target.value) || 2;
                             setInstallments(val);
-                            if (currentInstallment > val) setCurrentInstallment(val);
                           }}
                           className="w-full px-3 py-2 rounded-md border border-gray-300 text-sm focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
                         />
@@ -287,7 +271,6 @@ const ExpenseForm: React.FC = () => {
                       value={installments}
                       onChange={(e) => {
                         setInstallments(parseInt(e.target.value));
-                        setCurrentInstallment(1);
                       }}
                     >
                       {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 18, 24].map((num) => (
@@ -297,6 +280,19 @@ const ExpenseForm: React.FC = () => {
                       ))}
                     </select>
                   )}
+
+                  <div className="mt-3 flex items-center">
+                    <input
+                      id="payNextMonth"
+                      type="checkbox"
+                      checked={payNextMonth}
+                      onChange={(e) => setPayNextMonth(e.target.checked)}
+                      className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                    />
+                    <label htmlFor="payNextMonth" className="ml-2 block text-sm text-gray-700">
+                      Cobrar 1ª parcela no próximo mês
+                    </label>
+                  </div>
                 </div>
               )}
             </div>

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useUserSettings } from '../context/UserSettingsContext';
 import { X, Save, Loader2 } from 'lucide-react';
+import { formatCurrencyInput, parseCurrency } from '../lib/format';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -16,7 +17,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
 
   useEffect(() => {
     if (isOpen && contextSalary !== null) {
-      setSalary(contextSalary.toString());
+      setSalary(contextSalary.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
     }
   }, [isOpen, contextSalary]);
 
@@ -25,7 +26,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
     if (!user) return;
 
     setSaving(true);
-    const numericSalary = parseFloat(salary.replace(',', '.'));
+    const numericSalary = parseCurrency(salary);
 
     try {
       await updateSalary(numericSalary);
@@ -62,12 +63,11 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">R$</span>
                 <input
-                  type="number"
+                  type="text"
                   id="salary"
-                  step="0.01"
                   required
                   value={salary}
-                  onChange={(e) => setSalary(e.target.value)}
+                  onChange={(e) => setSalary(formatCurrencyInput(e.target.value))}
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
                   placeholder="0,00"
                 />

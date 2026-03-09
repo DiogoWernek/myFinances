@@ -4,10 +4,11 @@ import { useAuth } from '../context/AuthContext';
 import { useExpenses } from '../context/ExpensesContext';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { formatCurrency } from '../lib/format';
 import { Link } from 'react-router-dom';
-import { Plus, Edit2, Trash2, LogOut, ChevronLeft, ChevronRight, TrendingDown, PieChart, Settings, Wallet } from 'lucide-react';
+import { Plus, Edit2, Trash2, LogOut, ChevronLeft, ChevronRight, TrendingDown, PieChart, Settings, Wallet, RefreshCcw, Search, Filter } from 'lucide-react';
 import { PieChart as RePieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
-import { COLORS } from '../constants';
+import { COLORS, CATEGORIES } from '../constants';
 import SettingsModal from '../components/SettingsModal';
 import SavingsModal from '../components/SavingsModal';
 
@@ -27,8 +28,26 @@ const Dashboard: React.FC = () => {
     invalidateCache
   } = useExpenses();
 
+  const [searchTerm, setSearchTerm] = React.useState('');
+  const [selectedCategory, setSelectedCategory] = React.useState('');
+
+  const filteredExpenses = useMemo(() => {
+    return expenses.filter(expense => {
+      const matchesSearch = expense.description.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesCategory = selectedCategory ? expense.category === selectedCategory : true;
+      return matchesSearch && matchesCategory;
+    });
+  }, [expenses, searchTerm, selectedCategory]);
+
   const chartData = useMemo(() => {
     const categoryTotals: Record<string, number> = {};
+    // Use filteredExpenses if we want the chart to reflect filters, 
+    // but usually charts reflect the whole month.
+    // However, if the user filters the list, maybe they expect the chart to update?
+    // Let's stick to total month data for the chart as it's "Gastos por Categoria" overview.
+    // If the user wants to filter, they usually look at the list.
+    // BUT, usually "search" filters the list view.
+    // Let's keep chartData using 'expenses' (all expenses of the month) to maintain the overview context.
     expenses.forEach(expense => {
       const category = expense.category || 'Outros';
       categoryTotals[category] = (categoryTotals[category] || 0) + expense.amount;
@@ -156,7 +175,7 @@ const Dashboard: React.FC = () => {
             <div className="text-center sm:text-right">
               <p className="text-sm text-gray-500 font-medium mb-1">Total gasto no mês</p>
               <p className="text-4xl font-bold text-gray-900 tracking-tight">
-                {total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                {formatCurrency(total)}
               </p>
             </div>
           </div>
@@ -188,7 +207,7 @@ const Dashboard: React.FC = () => {
                     ))}
                   </Pie>
                   <Tooltip 
-                    formatter={(value: any) => value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                    formatter={(value: any) => formatCurrency(value)}
                   />
                   <Legend />
                 </RePieChart>
@@ -198,25 +217,63 @@ const Dashboard: React.FC = () => {
         )}
 
         {/* Action Bar */}
-        <div className="flex justify-between items-center mb-6">
-          <h3 className="text-lg font-semibold text-gray-900">Transações</h3>
-          <div className="flex gap-3">
-            <button
-              onClick={() => setIsSavingsOpen(true)}
-              className="inline-flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 px-4 py-2.5 rounded-full font-medium shadow-sm hover:shadow-md transition-all active:scale-95"
-            >
-              <Wallet className="w-5 h-5 text-green-600" />
-              <span className="hidden sm:inline">Quanto economizei?</span>
-              <span className="sm:hidden">Economia</span>
-            </button>
-            <Link
-              to="/add"
-              className="inline-flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white px-5 py-2.5 rounded-full font-medium shadow-sm hover:shadow-md transition-all active:scale-95"
-            >
-              <Plus className="w-5 h-5" />
-              <span className="hidden sm:inline">Nova Despesa</span>
-              <span className="sm:hidden">Nova</span>
-            </Link>
+        <div className="flex flex-col gap-4 mb-6">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-3">
+              <h3 className="text-lg font-semibold text-gray-900">Transações</h3>
+              <button
+                onClick={() => fetchExpenses(true)}
+                className="p-1.5 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded-full transition-colors"
+                title="Recarregar transações"
+              >
+                <RefreshCcw className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setIsSavingsOpen(true)}
+                className="inline-flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 px-4 py-2.5 rounded-full font-medium shadow-sm hover:shadow-md transition-all active:scale-95"
+              >
+                <Wallet className="w-5 h-5 text-green-600" />
+                <span className="hidden sm:inline">Quanto economizei?</span>
+                <span className="sm:hidden">Economia</span>
+              </button>
+              <Link
+                to="/add"
+                className="inline-flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white px-5 py-2.5 rounded-full font-medium shadow-sm hover:shadow-md transition-all active:scale-95"
+              >
+                <Plus className="w-5 h-5" />
+                <span className="hidden sm:inline">Nova Despesa</span>
+                <span className="sm:hidden">Nova</span>
+              </Link>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input 
+                type="text" 
+                placeholder="Buscar despesa..." 
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all shadow-sm"
+              />
+            </div>
+            <div className="relative min-w-[200px]">
+              <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <select
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                className="w-full pl-9 pr-8 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all shadow-sm appearance-none cursor-pointer"
+              >
+                <option value="">Todas as categorias</option>
+                {CATEGORIES.map(category => (
+                  <option key={category} value={category}>{category}</option>
+                ))}
+              </select>
+              <ChevronRight className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 rotate-90 pointer-events-none" />
+            </div>
           </div>
         </div>
 
@@ -227,16 +284,20 @@ const Dashboard: React.FC = () => {
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto mb-4"></div>
               <p className="text-gray-500">Carregando transações...</p>
             </div>
-          ) : expenses.length === 0 ? (
+          ) : filteredExpenses.length === 0 ? (
             <div className="text-center py-16 bg-white rounded-2xl border border-dashed border-gray-200">
               <div className="bg-gray-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
                 <TrendingDown className="w-8 h-8 text-gray-400" />
               </div>
-              <p className="text-gray-900 font-medium mb-1">Nenhuma despesa encontrada</p>
-              <p className="text-gray-500 text-sm">Adicione sua primeira despesa para começar a controlar seus gastos.</p>
+              <p className="text-gray-900 font-medium mb-1">
+                {searchTerm || selectedCategory ? 'Nenhuma despesa encontrada com estes filtros' : 'Nenhuma despesa encontrada'}
+              </p>
+              <p className="text-gray-500 text-sm">
+                {searchTerm || selectedCategory ? 'Tente buscar com outros termos ou categorias.' : 'Adicione sua primeira despesa para começar a controlar seus gastos.'}
+              </p>
             </div>
           ) : (
-            expenses.map((expense) => (
+            filteredExpenses.map((expense) => (
               <div 
                 key={expense.id} 
                 className="group bg-white rounded-xl p-4 border border-gray-100 hover:border-primary-200 hover:shadow-md transition-all duration-200 flex items-center justify-between gap-4"
@@ -258,7 +319,7 @@ const Dashboard: React.FC = () => {
 
                 <div className="text-right shrink-0">
                   <p className="font-bold text-gray-900">
-                    {expense.amount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                    {formatCurrency(expense.amount)}
                   </p>
                   <div className="flex justify-end gap-2 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
                     <Link to={`/edit/${expense.id}`} className="p-1 text-gray-400 hover:text-primary-600 transition-colors">
