@@ -3,6 +3,7 @@ import { AuthProvider } from './context/AuthContext';
 import { ExpensesProvider } from './context/ExpensesContext';
 import { UserSettingsProvider } from './context/UserSettingsContext';
 import { CardsProvider } from './context/CardsContext';
+import { FixedExpensesProvider } from './context/FixedExpensesContext';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import ExpenseForm from './pages/ExpenseForm';
@@ -14,6 +15,7 @@ function App() {
       <AuthProvider>
         <UserSettingsProvider>
           <CardsProvider>
+          <FixedExpensesProvider>
           <ExpensesProvider>
             <Routes>
               <Route path="/login" element={<Login />} />
@@ -43,6 +45,7 @@ function App() {
               />
             </Routes>
           </ExpensesProvider>
+          </FixedExpensesProvider>
           </CardsProvider>
         </UserSettingsProvider>
       </AuthProvider>

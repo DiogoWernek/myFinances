@@ -3,13 +3,13 @@ import { Link } from 'react-router-dom';
 import { X, Calendar, Tag, CreditCard, Layers, Edit2, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Expense } from '../types';
+import { DisplayExpense } from '../types';
 import { useCards } from '../context/CardsContext';
 import { PAYMENT_METHODS } from '../constants';
 import { formatCurrency } from '../lib/format';
 
 interface ExpenseDetailModalProps {
-  expense: Expense | null;
+  expense: DisplayExpense | null;
   onClose: () => void;
   onDelete: (id: string, installmentId?: string) => void;
 }

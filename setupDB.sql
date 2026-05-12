@@ -99,6 +99,44 @@ create policy "Usuários podem excluir suas próprias configurações"
 
 
 -- =============================================
+-- TABELA: fixed_expenses (Gastos Fixos Mensais)
+-- =============================================
+create table if not exists fixed_expenses (
+  id             uuid                     default uuid_generate_v4() primary key,
+  user_id        uuid                     references auth.users(id) not null,
+  description    text                     not null,
+  amount         numeric(10, 2)           not null,
+  category       text                     not null default 'Outros',
+  payment_method text                     not null default 'credit',
+  card_id        uuid                     references cards(id),
+  day_of_month   integer                  not null check (day_of_month >= 1 and day_of_month <= 31),
+  active         boolean                  not null default true,
+  created_at     timestamp with time zone default now() not null,
+  updated_at     timestamp with time zone default now() not null
+);
+
+create index if not exists idx_fixed_expenses_user_id on fixed_expenses(user_id);
+
+create trigger fixed_expenses_set_updated_at
+  before update on fixed_expenses
+  for each row execute function set_updated_at();
+
+alter table fixed_expenses enable row level security;
+
+create policy "Usuários podem ver seus próprios gastos fixos"
+  on fixed_expenses for select using (auth.uid() = user_id);
+
+create policy "Usuários podem criar seus próprios gastos fixos"
+  on fixed_expenses for insert with check (auth.uid() = user_id);
+
+create policy "Usuários podem atualizar seus próprios gastos fixos"
+  on fixed_expenses for update using (auth.uid() = user_id);
+
+create policy "Usuários podem excluir seus próprios gastos fixos"
+  on fixed_expenses for delete using (auth.uid() = user_id);
+
+
+-- =============================================
 -- MIGRAÇÃO: Feature de Cartões
 -- Execute estes comandos no Supabase SQL Editor
 -- Seguro: apenas adiciona nova tabela e coluna nullable

@@ -14,6 +14,25 @@ export interface Expense {
   updated_at: string;
 }
 
+export interface FixedExpense {
+  id: string;
+  user_id: string;
+  description: string;
+  amount: number;
+  category: string;
+  payment_method?: string;
+  card_id?: string;
+  day_of_month: number;
+  active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export type DisplayExpense = Expense & {
+  is_fixed?: boolean;
+  day_of_month?: number;
+};
+
 export interface Card {
   id: string;
   user_id: string;
