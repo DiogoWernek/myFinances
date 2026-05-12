@@ -43,8 +43,12 @@ const SavingsModal: React.FC<SavingsModalProps> = ({ isOpen, onClose, totalExpen
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-end sm:items-center sm:justify-center sm:p-4">
+      <div className="modal-bottom-sheet bg-white w-full max-h-[70vh] overflow-y-auto overflow-x-hidden rounded-t-2xl sm:rounded-2xl sm:max-w-md sm:max-h-[90vh] shadow-xl">
+        {/* Drag handle (mobile only) */}
+        <div className="sm:hidden flex justify-center pt-3 pb-1">
+          <div className="w-10 h-1 bg-gray-200 rounded-full" />
+        </div>
         <div className="flex items-center justify-between p-4 border-b border-gray-100">
           <div className="flex items-center gap-2">
             <div className={`p-2 rounded-lg ${isPositive ? 'bg-green-100' : 'bg-red-100'}`}>
@@ -64,7 +68,7 @@ const SavingsModal: React.FC<SavingsModalProps> = ({ isOpen, onClose, totalExpen
           </button>
         </div>
 
-        <div className="p-8 text-center">
+        <div className="p-4 sm:p-8 text-center">
           {loading ? (
             <div className="flex justify-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>

@@ -9,6 +9,19 @@ export interface Expense {
   year: number;
   payment_method?: string;
   installment_id?: string;
+  card_id?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Card {
+  id: string;
+  user_id: string;
+  name: string;
+  last_four?: string;
+  color: string;
+  closing_day?: number;
+  due_day?: number;
   created_at: string;
   updated_at: string;
 }

@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { ExpensesProvider } from './context/ExpensesContext';
 import { UserSettingsProvider } from './context/UserSettingsContext';
+import { CardsProvider } from './context/CardsContext';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import ExpenseForm from './pages/ExpenseForm';
@@ -12,6 +13,7 @@ function App() {
     <Router>
       <AuthProvider>
         <UserSettingsProvider>
+          <CardsProvider>
           <ExpensesProvider>
             <Routes>
               <Route path="/login" element={<Login />} />
@@ -41,6 +43,7 @@ function App() {
               />
             </Routes>
           </ExpensesProvider>
+          </CardsProvider>
         </UserSettingsProvider>
       </AuthProvider>
     </Router>

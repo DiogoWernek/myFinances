@@ -1,11 +1,13 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import { useExpenses } from '../context/ExpensesContext';
+import { useCards } from '../context/CardsContext';
 import { CATEGORIES, PAYMENT_METHODS } from '../constants';
 import { format, addMonths } from 'date-fns';
-import { ArrowLeft, Settings, X } from 'lucide-react';
+import { ptBR } from 'date-fns/locale';
+import { ArrowLeft, Settings, X, Calendar } from 'lucide-react';
 import { formatCurrencyInput, parseCurrency } from '../lib/format';
 
 const ExpenseForm: React.FC = () => {
@@ -13,21 +15,33 @@ const ExpenseForm: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { invalidateCache } = useExpenses();
+  const { cards } = useCards();
+
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
   const [category, setCategory] = useState(CATEGORIES[0]);
   const [paymentMethod, setPaymentMethod] = useState(PAYMENT_METHODS[0].value);
+  const [cardId, setCardId] = useState('');
   const [date, setDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [installments, setInstallments] = useState(1);
   const [showCustomInstallments, setShowCustomInstallments] = useState(false);
-  const [payNextMonth, setPayNextMonth] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const selectedCard = useMemo(() => cards.find(c => c.id === cardId), [cards, cardId]);
+
+  // Calcula em qual fatura a compra cairá com base no dia de fechamento do cartão
+  const billingBaseDate = useMemo(() => {
+    if (!date || !selectedCard?.closing_day) return null;
+    const purchaseDate = new Date(date + 'T00:00:00');
+    const purchaseDay = purchaseDate.getDate();
+    return purchaseDay >= selectedCard.closing_day
+      ? addMonths(purchaseDate, 1)
+      : purchaseDate;
+  }, [date, selectedCard]);
+
   useEffect(() => {
-    if (id) {
-      fetchExpense(id);
-    }
+    if (id) fetchExpense(id);
   }, [id]);
 
   const fetchExpense = async (expenseId: string) => {
@@ -46,9 +60,18 @@ const ExpenseForm: React.FC = () => {
       setAmount(data.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
       setCategory(data.category || CATEGORIES[0]);
       setPaymentMethod(data.payment_method || PAYMENT_METHODS[0].value);
+      setCardId(data.card_id || '');
       setDate(data.date);
     }
     setLoading(false);
+  };
+
+  const computeBaseDate = (purchaseDate: Date): Date => {
+    if (selectedCard?.closing_day) {
+      const day = purchaseDate.getDate();
+      if (day >= selectedCard.closing_day) return addMonths(purchaseDate, 1);
+    }
+    return purchaseDate;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -63,16 +86,20 @@ const ExpenseForm: React.FC = () => {
 
     try {
       if (id) {
-        // Edit mode - no installments logic for simplicity, just update the single expense
+        // Modo edição — atualiza gasto único
+        const purchaseDate = new Date(date + 'T00:00:00');
+        const billedDate = computeBaseDate(purchaseDate);
+
         const expenseData = {
           user_id: user.id,
           description,
           amount: baseAmount,
           category,
           payment_method: paymentMethod,
-          date,
-          month: new Date(date).getMonth() + 1,
-          year: new Date(date).getFullYear(),
+          card_id: cardId || null,
+          date: format(billedDate, 'yyyy-MM-dd'),
+          month: billedDate.getMonth() + 1,
+          year: billedDate.getFullYear(),
           updated_at: new Date().toISOString(),
         };
 
@@ -84,17 +111,16 @@ const ExpenseForm: React.FC = () => {
         if (updateError) throw updateError;
 
       } else {
-        // Create mode - handle installments
-        const expensesToInsert = [];
-        // Calculate the base date (date of the 1st installment)
-        // If payNextMonth is true, start from next month
-        const baseDate = payNextMonth ? addMonths(new Date(date), 1) : new Date(date);
+        // Modo criação — lida com parcelamento
+        const purchaseDate = new Date(date + 'T00:00:00');
+        const baseDate = computeBaseDate(purchaseDate);
         const installmentId = crypto.randomUUID();
+        const expensesToInsert = [];
 
         for (let i = 0; i < installments; i++) {
-          const currentInstallmentDate = addMonths(baseDate, i);
-          const currentDescription = installments > 1 
-            ? `${description} (${i + 1}/${installments})` 
+          const currentDate = addMonths(baseDate, i);
+          const currentDescription = installments > 1
+            ? `${description} (${i + 1}/${installments})`
             : description;
 
           expensesToInsert.push({
@@ -103,9 +129,10 @@ const ExpenseForm: React.FC = () => {
             amount: installmentAmount,
             category,
             payment_method: paymentMethod,
-            date: format(currentInstallmentDate, 'yyyy-MM-dd'),
-            month: currentInstallmentDate.getMonth() + 1,
-            year: currentInstallmentDate.getFullYear(),
+            card_id: cardId || null,
+            date: format(currentDate, 'yyyy-MM-dd'),
+            month: currentDate.getMonth() + 1,
+            year: currentDate.getFullYear(),
             installment_id: installments > 1 ? installmentId : null,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
@@ -165,7 +192,7 @@ const ExpenseForm: React.FC = () => {
                 type="text"
                 placeholder="Ex: Compras do mês"
                 value={description}
-                onChange={(e) => setDescription(e.target.value)}
+                onChange={e => setDescription(e.target.value)}
                 required
               />
             </div>
@@ -183,7 +210,7 @@ const ExpenseForm: React.FC = () => {
                     type="text"
                     placeholder="0,00"
                     value={amount}
-                    onChange={(e) => setAmount(formatCurrencyInput(e.target.value))}
+                    onChange={e => setAmount(formatCurrencyInput(e.target.value))}
                     required
                   />
                 </div>
@@ -191,14 +218,14 @@ const ExpenseForm: React.FC = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="date">
-                  Data {installments > 1 ? '(1ª parcela)' : ''}
+                  Data da compra
                 </label>
                 <input
                   className="w-full px-4 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all"
                   id="date"
                   type="date"
                   value={date}
-                  onChange={(e) => setDate(e.target.value)}
+                  onChange={e => setDate(e.target.value)}
                   required
                 />
               </div>
@@ -213,113 +240,126 @@ const ExpenseForm: React.FC = () => {
                   className="w-full px-4 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all appearance-none"
                   id="category"
                   value={category}
-                  onChange={(e) => setCategory(e.target.value)}
+                  onChange={e => setCategory(e.target.value)}
                 >
-                  {CATEGORIES.map((cat) => (
-                    <option key={cat} value={cat}>
-                      {cat}
-                    </option>
+                  {CATEGORIES.map(cat => (
+                    <option key={cat} value={cat}>{cat}</option>
                   ))}
                 </select>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="paymentMethod">
-                  Método de Pagamento
+                  Pagamento
                 </label>
                 <select
                   className="w-full px-4 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all appearance-none"
                   id="paymentMethod"
                   value={paymentMethod}
-                  onChange={(e) => setPaymentMethod(e.target.value)}
+                  onChange={e => setPaymentMethod(e.target.value)}
                 >
-                  {PAYMENT_METHODS.map((method) => (
-                    <option key={method.value} value={method.value}>
-                      {method.label}
-                    </option>
+                  {PAYMENT_METHODS.map(method => (
+                    <option key={method.value} value={method.value}>{method.label}</option>
                   ))}
                 </select>
               </div>
             </div>
-            
-            <div>
+
+            {/* Seletor de cartão */}
+            {cards.length > 0 && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="cardId">
+                  Cartão (opcional)
+                </label>
+                <select
+                  className="w-full px-4 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all appearance-none"
+                  id="cardId"
+                  value={cardId}
+                  onChange={e => setCardId(e.target.value)}
+                >
+                  <option value="">Nenhum</option>
+                  {cards.map(card => (
+                    <option key={card.id} value={card.id}>
+                      {card.name}{card.last_four ? ` •••• ${card.last_four}` : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {/* Info de fatura — só aparece quando o cartão tem dia de fechamento */}
+            {billingBaseDate && selectedCard && (
+              <div className="flex items-start gap-3 bg-blue-50 border border-blue-100 rounded-xl p-4">
+                <Calendar className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
+                <div className="text-sm">
+                  <p className="text-blue-800 font-medium">
+                    Esta compra cairá na fatura de{' '}
+                    <span className="font-bold capitalize">
+                      {format(billingBaseDate, 'MMMM yyyy', { locale: ptBR })}
+                    </span>
+                  </p>
+                  {selectedCard.due_day && (
+                    <p className="text-blue-600 text-xs mt-0.5">
+                      Vencimento: dia {selectedCard.due_day}
+                    </p>
+                  )}
+                  <p className="text-blue-500 text-xs mt-1">
+                    Cartão fecha dia {selectedCard.closing_day} · Compra dia {new Date(date + 'T00:00:00').getDate()}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Parcelamento — só aparece no modo criação */}
             {!id && (
               <div>
                 <div className="flex justify-between items-center mb-2">
                   <label className="block text-sm font-medium text-gray-700" htmlFor="installments">
                     Parcelas
                   </label>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setShowCustomInstallments(!showCustomInstallments);
-                        if (!showCustomInstallments) {
-                          // When opening custom mode, ensure we have valid values
-                          if (installments === 1) setInstallments(2);
-                        }
-                      }}
-                      className="text-xs text-primary-600 hover:text-primary-700 font-medium flex items-center gap-1"
-                    >
-                      {showCustomInstallments ? (
-                        <>
-                          <X className="w-3 h-3" /> Cancelar
-                        </>
-                      ) : (
-                        <>
-                          <Settings className="w-3 h-3" /> Customizar
-                        </>
-                      )}
-                    </button>
-                  </div>
-
-                  {showCustomInstallments ? (
-                    <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
-                      <div>
-                        <label className="block text-xs text-gray-500 mb-1 font-medium">Total de Parcelas</label>
-                        <input
-                          type="number"
-                          min="2"
-                          value={installments}
-                          onChange={(e) => {
-                            const val = parseInt(e.target.value) || 2;
-                            setInstallments(val);
-                          }}
-                          className="w-full px-3 py-2 rounded-md border border-gray-300 text-sm focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
-                        />
-                      </div>
-                    </div>
-                  ) : (
-                    <select
-                      className="w-full px-4 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all appearance-none"
-                      id="installments"
-                      value={installments}
-                      onChange={(e) => {
-                        setInstallments(parseInt(e.target.value));
-                      }}
-                    >
-                      {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 18, 24].map((num) => (
-                        <option key={num} value={num}>
-                          {num === 1 ? 'À vista (1x)' : `${num}x`}
-                        </option>
-                      ))}
-                    </select>
-                  )}
-
-                  <div className="mt-3 flex items-center">
-                    <input
-                      id="payNextMonth"
-                      type="checkbox"
-                      checked={payNextMonth}
-                      onChange={(e) => setPayNextMonth(e.target.checked)}
-                      className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-                    />
-                    <label htmlFor="payNextMonth" className="ml-2 block text-sm text-gray-700">
-                      Cobrar 1ª parcela no próximo mês
-                    </label>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowCustomInstallments(!showCustomInstallments);
+                      if (!showCustomInstallments && installments === 1) setInstallments(2);
+                    }}
+                    className="text-xs text-primary-600 hover:text-primary-700 font-medium flex items-center gap-1"
+                  >
+                    {showCustomInstallments ? (
+                      <><X className="w-3 h-3" /> Cancelar</>
+                    ) : (
+                      <><Settings className="w-3 h-3" /> Customizar</>
+                    )}
+                  </button>
                 </div>
-              )}
-            </div>
+
+                {showCustomInstallments ? (
+                  <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                    <label className="block text-xs text-gray-500 mb-1 font-medium">Total de Parcelas</label>
+                    <input
+                      type="number"
+                      min="2"
+                      value={installments}
+                      onChange={e => setInstallments(parseInt(e.target.value) || 2)}
+                      className="w-full px-3 py-2 rounded-md border border-gray-300 text-sm focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
+                    />
+                  </div>
+                ) : (
+                  <select
+                    className="w-full px-4 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all appearance-none"
+                    id="installments"
+                    value={installments}
+                    onChange={e => setInstallments(parseInt(e.target.value))}
+                  >
+                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 18, 24].map(num => (
+                      <option key={num} value={num}>
+                        {num === 1 ? 'À vista (1x)' : `${num}x`}
+                      </option>
+                    ))}
+                  </select>
+                )}
+              </div>
+            )}
 
             <div className="pt-4 flex gap-3">
               <button

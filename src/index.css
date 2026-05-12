@@ -26,6 +26,27 @@ button {
   cursor: pointer;
 }
 
+/* Bottom sheet slide-up animation (mobile modals) */
+@keyframes slide-up {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+@media (max-width: 639px) {
+  .modal-bottom-sheet {
+    animation: slide-up 0.25s ease-out;
+  }
+}
+
+/* Esconde scrollbar mantendo scroll funcional */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
 /* Clean scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
