@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Plus, Trash2, Loader2, RefreshCw, Settings, X } from 'lucide-react';
+import { Plus, Trash2, Loader2, RefreshCw, X } from 'lucide-react';
 import { useFixedExpenses } from '../context/FixedExpensesContext';
 import { useCards } from '../context/CardsContext';
 import { CATEGORIES, PAYMENT_METHODS } from '../constants';
