@@ -3,7 +3,24 @@
 @tailwind utilities;
 
 :root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  /* Tema escuro (padrao) */
+  --bg: #0D0F12;
+  --bg-2: #131619;
+  --surface: #171B20;
+  --surface-2: #1E232A;
+  --border: rgba(255, 255, 255, .09);
+  --border-strong: rgba(255, 255, 255, .17);
+  --text: #F2F5F3;
+  --text-2: #A4ACA8;
+  --text-3: #6C746F;
+  --accent: #00E0A4;
+  --accent-ink: #062018;
+  --accent-soft: color-mix(in srgb, var(--accent) 16%, transparent);
+  --neg: #FF6B5A;
+  --neg-soft: color-mix(in srgb, #FF6B5A 15%, transparent);
+  --shadow: 0 24px 60px -24px rgba(0, 0, 0, .55);
+
+  font-family: 'Hanken Grotesk', ui-sans-serif, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
 
@@ -13,17 +30,54 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+[data-theme="light"] {
+  --bg: #F4F2EC;
+  --bg-2: #FFFFFF;
+  --surface: #FFFFFF;
+  --surface-2: #F6F4EE;
+  --border: rgba(20, 24, 27, .10);
+  --border-strong: rgba(20, 24, 27, .20);
+  --text: #15191B;
+  --text-2: #5B625E;
+  --text-3: #9AA09B;
+  --accent-ink: #062018;
+  --neg: #E24B37;
+  --neg-soft: color-mix(in srgb, #E24B37 12%, transparent);
+  --shadow: 0 24px 60px -30px rgba(31, 35, 33, .26);
+}
+
 body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  background-color: #f9fafb; /* gray-50 */
-  color: #1f2937; /* gray-800 */
+  background-color: var(--bg);
+  color: var(--text);
+  transition: background-color .3s, color .3s;
 }
 
 /* Override default button styles */
 button {
   cursor: pointer;
+  font-family: inherit;
+}
+
+input, select, textarea {
+  font-family: inherit;
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+/* Evita que o autofill do Chrome force fundo branco nos inputs do tema escuro */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--text);
+  -webkit-box-shadow: 0 0 0px 1000px var(--surface-2) inset;
+  box-shadow: 0 0 0px 1000px var(--surface-2) inset;
+  transition: background-color 9999s ease-in-out 0s;
 }
 
 /* Bottom sheet slide-up animation (mobile modals) */
@@ -56,9 +110,9 @@ button {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #d1d5db;
+  background: var(--border-strong);
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #9ca3af;
+  background: var(--text-3);
 }

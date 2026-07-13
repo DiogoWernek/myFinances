@@ -5,7 +5,14 @@ const PrivateRoute = ({ children }: { children: JSX.Element }) => {
   const { user, loading } = useAuth();
 
   if (loading) {
-    return <div>Carregando...</div>;
+    return (
+      <div
+        className="flex items-center justify-center min-h-screen text-sm"
+        style={{ background: 'var(--bg)', color: 'var(--text-2)' }}
+      >
+        Carregando...
+      </div>
+    );
   }
 
   if (!user) {

@@ -4,6 +4,7 @@ import { ExpensesProvider } from './context/ExpensesContext';
 import { UserSettingsProvider } from './context/UserSettingsContext';
 import { CardsProvider } from './context/CardsContext';
 import { FixedExpensesProvider } from './context/FixedExpensesContext';
+import { ThemeProvider } from './context/ThemeContext';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import ExpenseForm from './pages/ExpenseForm';
@@ -11,6 +12,7 @@ import PrivateRoute from './components/PrivateRoute';
 
 function App() {
   return (
+    <ThemeProvider>
     <Router>
       <AuthProvider>
         <UserSettingsProvider>
@@ -50,6 +52,7 @@ function App() {
         </UserSettingsProvider>
       </AuthProvider>
     </Router>
+    </ThemeProvider>
   );
 }
 

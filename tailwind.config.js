@@ -7,22 +7,26 @@ export default {
   theme: {
     extend: {
       colors: {
+        // Legado — mantido como rede de seguranca para qualquer uso residual de `primary-*`.
+        // A paleta viva do produto agora vive nas CSS custom properties (--accent, --surface, etc.)
+        // definidas em src/index.css e consumidas via classes arbitrarias `bg-[var(--x)]`.
         primary: {
-          50: '#f0fdf4',
-          100: '#dcfce7',
-          200: '#bbf7d0',
-          300: '#86efac',
-          400: '#4ade80',
-          500: '#22c55e',
-          600: '#16a34a',
-          700: '#15803d',
-          800: '#166534',
-          900: '#14532d',
-          950: '#052e16',
+          50: '#e6fbf5',
+          100: '#c2f6e5',
+          200: '#8fedd0',
+          300: '#5ce3ba',
+          400: '#2eecab',
+          500: '#00E0A4',
+          600: '#00b884',
+          700: '#039169',
+          800: '#0a7154',
+          900: '#0b5d46',
+          950: '#062018',
         },
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
+        sans: ['Hanken Grotesk', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        serif: ['Instrument Serif', 'Georgia', 'serif'],
       },
     },
   },
