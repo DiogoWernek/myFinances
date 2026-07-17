@@ -4,8 +4,6 @@ import { useFixedExpenses } from '../context/FixedExpensesContext';
 import { useCards } from '../context/CardsContext';
 import { CATEGORIES, PAYMENT_METHODS } from '../constants';
 import { formatCurrency, formatCurrencyInput, parseCurrency } from '../lib/format';
-import { getCategoryMeta } from '../lib/categoryMeta';
-import Switch from './Switch';
 
 const FixedExpensesTab: React.FC = () => {
   const { fixedExpenses, loading, addFixedExpense, deleteFixedExpense, toggleFixedExpense } = useFixedExpenses();
@@ -62,39 +60,38 @@ const FixedExpensesTab: React.FC = () => {
     await deleteFixedExpense(id);
   };
 
-  const inputCls = 'w-full px-4 py-2.5 rounded-xl border outline-none transition-colors';
-  const inputStyle = { background: 'var(--surface-2)', borderColor: 'var(--border-strong)', color: 'var(--text)' };
+  const inputCls = 'w-full px-4 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all';
 
   if (loading) {
     return (
       <div className="flex justify-center py-12">
-        <Loader2 className="w-6 h-6 animate-spin" style={{ color: 'var(--accent)' }} />
+        <Loader2 className="w-6 h-6 animate-spin text-primary-600" />
       </div>
     );
   }
 
-  const activeCount = fixedExpenses.filter(fe => fe.active).length;
-  const pausedCount = fixedExpenses.filter(fe => !fe.active).length;
-
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       {/* Summary card */}
       {fixedExpenses.length > 0 && (
-        <div className="rounded-[20px] border p-5 flex items-center justify-between gap-4 flex-wrap" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
-          <div>
-            <p className="text-[11px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-3)' }}>Total fixo mensal</p>
-            <p className="font-serif text-3xl mt-1.5 tabular-nums" style={{ color: 'var(--text)' }}>{formatCurrency(totalFixed)}</p>
-          </div>
-          <div className="flex gap-2.5">
-            <div className="text-center rounded-xl px-4 py-2.5" style={{ background: 'var(--accent-soft)' }}>
-              <div className="font-serif text-xl" style={{ color: 'var(--accent)' }}>{activeCount}</div>
-              <div className="text-[11px] font-semibold" style={{ color: 'var(--text-2)' }}>Ativos</div>
+        <div className="bg-white rounded-xl border border-gray-100 p-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="bg-orange-50 p-2 rounded-lg">
+              <RefreshCw className="w-5 h-5 text-orange-500" />
             </div>
-            {pausedCount > 0 && (
-              <div className="text-center rounded-xl px-4 py-2.5" style={{ background: 'var(--surface-2)' }}>
-                <div className="font-serif text-xl" style={{ color: 'var(--text-3)' }}>{pausedCount}</div>
-                <div className="text-[11px] font-semibold" style={{ color: 'var(--text-2)' }}>Pausados</div>
-              </div>
+            <div>
+              <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">Total fixo mensal</p>
+              <p className="text-xl font-bold text-gray-900">{formatCurrency(totalFixed)}</p>
+            </div>
+          </div>
+          <div className="text-right">
+            <p className="text-sm text-gray-500">
+              {fixedExpenses.filter(fe => fe.active).length} ativo{fixedExpenses.filter(fe => fe.active).length !== 1 ? 's' : ''}
+            </p>
+            {fixedExpenses.some(fe => !fe.active) && (
+              <p className="text-xs text-gray-400">
+                {fixedExpenses.filter(fe => !fe.active).length} pausado{fixedExpenses.filter(fe => !fe.active).length !== 1 ? 's' : ''}
+              </p>
             )}
           </div>
         </div>
@@ -102,18 +99,17 @@ const FixedExpensesTab: React.FC = () => {
 
       {/* Empty state */}
       {fixedExpenses.length === 0 && !showAddForm && (
-        <div className="text-center py-16 rounded-[22px] border border-dashed" style={{ borderColor: 'var(--border-strong)' }}>
-          <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4" style={{ background: 'var(--surface-2)' }}>
-            <RefreshCw className="w-7 h-7" style={{ color: 'var(--text-3)' }} />
+        <div className="text-center py-16 bg-white rounded-2xl border border-dashed border-gray-200">
+          <div className="bg-gray-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+            <RefreshCw className="w-8 h-8 text-gray-400" />
           </div>
-          <p className="font-serif text-xl" style={{ color: 'var(--text)' }}>Nenhum gasto fixo cadastrado</p>
-          <p className="text-sm mb-6 mt-1" style={{ color: 'var(--text-3)' }}>
+          <p className="text-gray-900 font-medium mb-1">Nenhum gasto fixo cadastrado</p>
+          <p className="text-gray-500 text-sm mb-6">
             Aluguel, streaming, academia... tudo que você paga todo mês.
           </p>
           <button
             onClick={() => setShowAddForm(true)}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full font-bold transition-all active:scale-95"
-            style={{ background: 'var(--accent)', color: 'var(--accent-ink)' }}
+            className="inline-flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white px-5 py-2.5 rounded-full font-medium shadow-sm transition-all active:scale-95"
           >
             <Plus className="w-4 h-4" />
             Adicionar Gasto Fixo
@@ -122,65 +118,81 @@ const FixedExpensesTab: React.FC = () => {
       )}
 
       {/* Fixed expenses list */}
-      {fixedExpenses.length > 0 && (
-        <div className="flex flex-col gap-2 sm:gap-0 sm:rounded-[20px] sm:border sm:px-5 sm:bg-[var(--surface)] border-[var(--border)]">
-          {fixedExpenses.map((fe, idx) => {
-            const card = cards.find(c => c.id === fe.card_id);
-            const meta = getCategoryMeta(fe.category);
-            const Icon = meta.Icon;
-            const isLast = idx === fixedExpenses.length - 1;
-            return (
-              <div
-                key={fe.id}
-                className={`flex items-center gap-3 sm:gap-3.5 rounded-[15px] border p-3 bg-[var(--surface)] sm:rounded-none sm:border-x-0 sm:border-t-0 sm:p-0 sm:py-3.5 sm:bg-transparent border-[var(--border)] ${isLast ? 'sm:border-b-0' : 'sm:border-b'}`}
-                style={{ opacity: fe.active ? 1 : 0.5 }}
-              >
-                <span
-                  className="w-10 h-10 rounded-xl shrink-0 flex items-center justify-center"
-                  style={{ background: 'var(--surface-2)', color: meta.color }}
-                >
-                  <Icon className="w-5 h-5" />
-                </span>
+      {fixedExpenses.map(fe => {
+        const card = cards.find(c => c.id === fe.card_id);
+        return (
+          <div
+            key={fe.id}
+            className={`bg-white rounded-xl border flex items-stretch overflow-hidden transition-opacity ${fe.active ? 'border-gray-100' : 'border-gray-100 opacity-60'}`}
+          >
+            {/* Left strip */}
+            <div
+              className="w-1.5 shrink-0"
+              style={{ backgroundColor: card ? card.color : '#f97316' }}
+            />
+
+            <div className="flex items-center justify-between gap-3 flex-1 p-4 min-w-0">
+              <div className="flex items-start gap-3 min-w-0 flex-1">
+                <div className={`w-10 h-10 rounded-xl shrink-0 flex items-center justify-center mt-0.5 ${fe.active ? 'bg-orange-50' : 'bg-gray-50'}`}>
+                  <RefreshCw className={`w-5 h-5 ${fe.active ? 'text-orange-500' : 'text-gray-400'}`} />
+                </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <p className="font-semibold text-[15px] truncate" style={{ color: 'var(--text)' }}>
+                    <p className={`font-semibold truncate ${fe.active ? 'text-gray-900' : 'text-gray-400'}`}>
                       {fe.description}
                     </p>
                     {!fe.active && (
-                      <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full shrink-0" style={{ background: 'var(--surface-2)', color: 'var(--text-3)' }}>Pausado</span>
+                      <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full shrink-0">Pausado</span>
                     )}
                   </div>
-                  <p className="text-xs mt-0.5" style={{ color: 'var(--text-3)' }}>
-                    {fe.category} · todo dia {fe.day_of_month}{card ? ` · ${card.name}` : ''}
-                  </p>
+                  <div className="flex items-center gap-2 mt-1 flex-wrap">
+                    <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
+                      {fe.category}
+                    </span>
+                    <span className="text-xs bg-orange-50 text-orange-700 border border-orange-100 px-2 py-0.5 rounded-full">
+                      Todo dia {fe.day_of_month}
+                    </span>
+                    {card && (
+                      <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: card.color }} />
+                        {card.name}
+                      </span>
+                    )}
+                  </div>
                 </div>
-                <p className="font-bold text-[15px] tabular-nums shrink-0" style={{ color: 'var(--text)' }}>
+              </div>
+
+              <div className="flex items-center gap-2 shrink-0">
+                <p className={`font-bold ${fe.active ? 'text-gray-900' : 'text-gray-400'}`}>
                   {formatCurrency(fe.amount)}
                 </p>
-                <Switch
-                  checked={fe.active}
-                  onChange={() => toggleFixedExpense(fe.id, !fe.active)}
+
+                {/* Toggle */}
+                <button
+                  onClick={() => toggleFixedExpense(fe.id, !fe.active)}
                   title={fe.active ? 'Pausar' : 'Ativar'}
-                />
+                  className={`relative w-10 h-6 rounded-full transition-colors shrink-0 ${fe.active ? 'bg-primary-500' : 'bg-gray-200'}`}
+                >
+                  <span className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${fe.active ? 'translate-x-[-1rem]' : 'translate-x-0'}`} />
+                </button>
+
                 <button
                   onClick={() => handleDelete(fe.id, fe.description)}
-                  className="w-8 h-8 flex items-center justify-center rounded-lg transition-colors shrink-0"
-                  style={{ color: 'var(--text-3)' }}
+                  className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
               </div>
-            );
-          })}
-        </div>
-      )}
+            </div>
+          </div>
+        );
+      })}
 
       {/* Add button */}
       {fixedExpenses.length > 0 && !showAddForm && (
         <button
           onClick={() => setShowAddForm(true)}
-          className="w-full flex items-center justify-center gap-2 py-3 border-2 border-dashed rounded-xl font-semibold transition-all"
-          style={{ borderColor: 'var(--border)', color: 'var(--text-2)' }}
+          className="w-full flex items-center justify-center gap-2 py-3 border-2 border-dashed border-gray-200 rounded-xl text-gray-500 hover:text-primary-600 hover:border-primary-300 hover:bg-primary-50/50 transition-all font-medium"
         >
           <Plus className="w-4 h-4" />
           Adicionar Gasto Fixo
@@ -189,16 +201,16 @@ const FixedExpensesTab: React.FC = () => {
 
       {/* Add form */}
       {showAddForm && (
-        <form onSubmit={handleAdd} className="rounded-[20px] p-5 border space-y-4" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
+        <form onSubmit={handleAdd} className="bg-white rounded-xl p-5 border border-primary-200 shadow-sm space-y-4">
           <div className="flex items-center justify-between">
-            <h4 className="font-serif text-xl" style={{ color: 'var(--text)' }}>Novo gasto fixo</h4>
-            <button type="button" onClick={resetForm} className="p-1 rounded-lg transition-colors" style={{ color: 'var(--text-3)' }}>
+            <h4 className="font-semibold text-gray-900">Novo Gasto Fixo</h4>
+            <button type="button" onClick={resetForm} className="text-gray-400 hover:text-gray-600 p-1 rounded-lg">
               <X className="w-4 h-4" />
             </button>
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text-2)' }}>Descrição</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">Descrição</label>
             <input
               type="text"
               placeholder="Ex: Aluguel, Netflix, Academia..."
@@ -207,28 +219,26 @@ const FixedExpensesTab: React.FC = () => {
               required
               autoFocus
               className={inputCls}
-              style={inputStyle}
             />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text-2)' }}>Valor</label>
-              <div className="flex items-center gap-2 rounded-xl border px-3.5 py-2.5" style={inputStyle}>
-                <span className="font-medium text-sm shrink-0" style={{ color: 'var(--text-3)' }}>R$</span>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Valor</label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-medium text-sm">R$</span>
                 <input
                   type="text"
                   placeholder="0,00"
                   value={amount}
                   onChange={e => setAmount(formatCurrencyInput(e.target.value))}
                   required
-                  className="w-full min-w-0 bg-transparent outline-none"
-                  style={{ color: 'var(--text)' }}
+                  className={inputCls + ' !pl-8'}
                 />
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text-2)' }}>Todo dia</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Todo dia</label>
               <input
                 type="number"
                 min="1"
@@ -238,21 +248,20 @@ const FixedExpensesTab: React.FC = () => {
                 onChange={e => setDayOfMonth(e.target.value.replace(/\D/g, '').slice(0, 2))}
                 required
                 className={inputCls}
-                style={inputStyle}
               />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text-2)' }}>Categoria</label>
-              <select value={category} onChange={e => setCategory(e.target.value)} className={inputCls} style={inputStyle}>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Categoria</label>
+              <select value={category} onChange={e => setCategory(e.target.value)} className={inputCls + ' appearance-none'}>
                 {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text-2)' }}>Pagamento</label>
-              <select value={paymentMethod} onChange={e => setPaymentMethod(e.target.value)} className={inputCls} style={inputStyle}>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Pagamento</label>
+              <select value={paymentMethod} onChange={e => setPaymentMethod(e.target.value)} className={inputCls + ' appearance-none'}>
                 {PAYMENT_METHODS.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
               </select>
             </div>
@@ -260,8 +269,8 @@ const FixedExpensesTab: React.FC = () => {
 
           {cards.length > 0 && (
             <div>
-              <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text-2)' }}>Cartão (opcional)</label>
-              <select value={cardId} onChange={e => setCardId(e.target.value)} className={inputCls} style={inputStyle}>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Cartão (opcional)</label>
+              <select value={cardId} onChange={e => setCardId(e.target.value)} className={inputCls + ' appearance-none'}>
                 <option value="">Nenhum</option>
                 {cards.map(c => (
                   <option key={c.id} value={c.id}>
@@ -276,16 +285,14 @@ const FixedExpensesTab: React.FC = () => {
             <button
               type="button"
               onClick={resetForm}
-              className="flex-1 px-4 py-2.5 font-semibold rounded-xl border transition-colors"
-              style={{ background: 'transparent', borderColor: 'var(--border-strong)', color: 'var(--text)' }}
+              className="flex-1 px-4 py-2.5 bg-white border border-gray-200 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={adding || !description.trim() || !amount || !dayOfMonth}
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 font-bold rounded-xl transition-all disabled:opacity-60"
-              style={{ background: 'var(--accent)', color: 'var(--accent-ink)' }}
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg shadow-sm transition-all disabled:opacity-60"
             >
               {adding ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
               {adding ? 'Adicionando...' : 'Adicionar'}

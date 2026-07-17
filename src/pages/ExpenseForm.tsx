@@ -5,13 +5,10 @@ import { useAuth } from '../context/AuthContext';
 import { useExpenses } from '../context/ExpensesContext';
 import { useCards } from '../context/CardsContext';
 import { CATEGORIES, PAYMENT_METHODS } from '../constants';
-import { getCategoryMeta } from '../lib/categoryMeta';
 import { format, addMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { ArrowLeft, Settings, X, Calendar, Layers, Check } from 'lucide-react';
+import { ArrowLeft, Settings, X, Calendar, Layers } from 'lucide-react';
 import { formatCurrencyInput, parseCurrency } from '../lib/format';
-
-const INSTALLMENT_OPTIONS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 18, 24];
 
 const ExpenseForm: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -239,17 +236,7 @@ const ExpenseForm: React.FC = () => {
   // Controle da seção de parcelas: criação OU edição de série
   const showInstallmentsSection = !id || isInstallmentSeries;
 
-  const inputCls = 'w-full px-3.5 py-3 rounded-[13px] border outline-none transition-colors';
-  const inputStyle = { background: 'var(--surface-2)', borderColor: 'var(--border-strong)', color: 'var(--text)' };
-
-  const pillStyle = (active: boolean, accentColor?: string) => ({
-    display: 'inline-flex', alignItems: 'center', gap: '7px',
-    padding: '8px 13px', borderRadius: '999px',
-    border: `1px solid ${active ? (accentColor || 'var(--text)') : 'var(--border)'}`,
-    background: active ? (accentColor ? 'var(--surface-2)' : 'var(--text)') : 'transparent',
-    color: active ? (accentColor ? 'var(--text)' : 'var(--bg)') : 'var(--text-2)',
-    fontWeight: 600, fontSize: '13px', cursor: 'pointer',
-  } as React.CSSProperties);
+  const inputCls = 'w-full px-4 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all';
 
   const pageTitle = id
     ? isInstallmentSeries
@@ -264,35 +251,35 @@ const ExpenseForm: React.FC = () => {
     : 'Preencha os dados para adicionar sua despesa.';
 
   return (
-    <div className="min-h-screen p-4 sm:p-8 flex items-center justify-center" style={{ background: 'var(--bg)' }}>
+    <div className="min-h-screen bg-gray-50/50 p-4 sm:p-8 flex items-center justify-center">
       <div className="w-full max-w-lg">
         <div className="mb-6">
-          <Link to="/" className="inline-flex items-center transition-colors" style={{ color: 'var(--text-2)' }}>
+          <Link to="/" className="inline-flex items-center text-gray-500 hover:text-gray-900 transition-colors">
             <ArrowLeft className="w-5 h-5 mr-2" />
             Voltar para o Dashboard
           </Link>
         </div>
 
-        <div className="rounded-[18px] border overflow-hidden" style={{ background: 'var(--bg-2)', borderColor: 'var(--border)', boxShadow: 'var(--shadow)' }}>
-          <div className="px-8 py-6 border-b" style={{ borderColor: 'var(--border)' }}>
-            <h2 className="font-serif text-2xl" style={{ color: 'var(--text)' }}>{pageTitle}</h2>
-            <p className="text-sm mt-1" style={{ color: 'var(--text-2)' }}>{pageSubtitle}</p>
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+          <div className="px-8 py-6 border-b border-gray-50 bg-white">
+            <h2 className="text-xl font-bold text-gray-900">{pageTitle}</h2>
+            <p className="text-sm text-gray-500 mt-1">{pageSubtitle}</p>
           </div>
 
           <form onSubmit={handleSubmit} className="p-8 space-y-6">
             {error && (
-              <div className="p-3 rounded-xl text-sm font-medium" style={{ background: 'var(--neg-soft)', color: 'var(--neg)' }}>
+              <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm border border-red-100">
                 {error}
               </div>
             )}
 
             {/* Banner de aviso para edição de parcelamento */}
             {isInstallmentSeries && (
-              <div className="flex items-start gap-3 rounded-[13px] p-4" style={{ background: 'var(--accent-soft)' }}>
-                <Layers className="w-4 h-4 shrink-0 mt-0.5" style={{ color: 'var(--accent)' }} />
-                <div className="text-sm" style={{ color: 'var(--text)' }}>
+              <div className="flex items-start gap-3 bg-amber-50 border border-amber-100 rounded-xl p-4">
+                <Layers className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                <div className="text-sm text-amber-800">
                   <p className="font-medium">Editando parcelamento completo ({installments}x)</p>
-                  <p className="text-xs mt-0.5" style={{ color: 'var(--text-2)' }}>
+                  <p className="text-amber-600 text-xs mt-0.5">
                     O valor total será redistribuído igualmente em todas as parcelas.
                   </p>
                 </div>
@@ -301,12 +288,11 @@ const ExpenseForm: React.FC = () => {
 
             {/* Descrição */}
             <div>
-              <label className="block text-xs font-semibold mb-2" style={{ color: 'var(--text-2)' }} htmlFor="description">
+              <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="description">
                 Descrição
               </label>
               <input
-                className={inputCls}
-                style={inputStyle}
+                className={inputCls + ' placeholder-gray-400'}
                 id="description"
                 type="text"
                 placeholder="Ex: Compras do mês"
@@ -319,31 +305,38 @@ const ExpenseForm: React.FC = () => {
             {/* Valor + Data */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold mb-2" style={{ color: 'var(--text-2)' }} htmlFor="amount">
+                <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="amount">
                   {isInstallmentSeries ? 'Valor Total' : 'Valor'}
                 </label>
-                <div className="flex items-center gap-2.5 rounded-[14px] border px-4 py-2.5" style={inputStyle}>
-                  <span className="font-serif text-xl shrink-0" style={{ color: 'var(--text-3)' }}>R$</span>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium">R$</span>
                   <input
+                    className={inputCls + ' !pl-9 placeholder-gray-400'}
                     id="amount"
                     type="text"
                     placeholder="0,00"
                     value={amount}
                     onChange={e => setAmount(formatCurrencyInput(e.target.value))}
                     required
-                    className="w-full min-w-0 bg-transparent outline-none font-serif text-2xl tabular-nums"
-                    style={{ color: 'var(--text)' }}
                   />
                 </div>
+                {isInstallmentSeries && installments > 1 && amount && (
+                  <p className="text-xs text-gray-400 mt-1">
+                    {installments}x de{' '}
+                    {(parseCurrency(amount) / installments).toLocaleString('pt-BR', {
+                      style: 'currency',
+                      currency: 'BRL',
+                    })}
+                  </p>
+                )}
               </div>
 
               <div>
-                <label className="block text-xs font-semibold mb-2" style={{ color: 'var(--text-2)' }} htmlFor="date">
+                <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="date">
                   {isInstallmentSeries ? 'Data da 1ª Parcela' : installments > 1 ? 'Data (1ª parcela)' : 'Data da compra'}
                 </label>
                 <input
                   className={inputCls}
-                  style={inputStyle}
                   id="date"
                   type="date"
                   value={date}
@@ -353,100 +346,74 @@ const ExpenseForm: React.FC = () => {
               </div>
             </div>
 
-            {/* Categoria */}
-            <div>
-              <label className="block text-xs font-semibold mb-2.5" style={{ color: 'var(--text-2)' }}>
-                Categoria
-              </label>
-              <div className="flex flex-wrap gap-2">
-                {CATEGORIES.map(cat => {
-                  const meta = getCategoryMeta(cat);
-                  const active = category === cat;
-                  return (
-                    <button
-                      key={cat}
-                      type="button"
-                      onClick={() => setCategory(cat)}
-                      style={pillStyle(active, meta.color)}
-                    >
-                      <span className="w-2 h-2 rounded-sm shrink-0" style={{ background: meta.color }} />
-                      {cat}
-                    </button>
-                  );
-                })}
+            {/* Categoria + Pagamento */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="category">
+                  Categoria
+                </label>
+                <select
+                  className={inputCls + ' appearance-none'}
+                  id="category"
+                  value={category}
+                  onChange={e => setCategory(e.target.value)}
+                >
+                  {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                </select>
               </div>
-            </div>
 
-            {/* Forma de pagamento */}
-            <div>
-              <label className="block text-xs font-semibold mb-2.5" style={{ color: 'var(--text-2)' }}>
-                Forma de pagamento
-              </label>
-              <div className="flex gap-1.5 rounded-[13px] border p-1.5" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
-                {PAYMENT_METHODS.map(m => {
-                  const active = paymentMethod === m.value;
-                  return (
-                    <button
-                      key={m.value}
-                      type="button"
-                      onClick={() => setPaymentMethod(m.value)}
-                      className="flex-1 py-2.5 rounded-[11px] text-[13px] font-semibold text-center transition-colors"
-                      style={active ? { background: 'var(--text)', color: 'var(--bg)' } : { color: 'var(--text-2)' }}
-                    >
-                      {m.label}
-                    </button>
-                  );
-                })}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="paymentMethod">
+                  Pagamento
+                </label>
+                <select
+                  className={inputCls + ' appearance-none'}
+                  id="paymentMethod"
+                  value={paymentMethod}
+                  onChange={e => setPaymentMethod(e.target.value)}
+                >
+                  {PAYMENT_METHODS.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
+                </select>
               </div>
             </div>
 
             {/* Cartão */}
             {cards.length > 0 && (
               <div>
-                <label className="block text-xs font-semibold mb-2.5" style={{ color: 'var(--text-2)' }}>
+                <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="cardId">
                   Cartão (opcional)
                 </label>
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setCardId('')}
-                    style={pillStyle(cardId === '')}
-                  >
-                    Sem cartão
-                  </button>
-                  {cards.map(card => {
-                    const active = cardId === card.id;
-                    return (
-                      <button
-                        key={card.id}
-                        type="button"
-                        onClick={() => setCardId(card.id)}
-                        style={pillStyle(active, card.color)}
-                      >
-                        <span className="w-2 h-2 rounded-sm shrink-0" style={{ background: card.color }} />
-                        {card.name}{card.last_four ? ` •••• ${card.last_four}` : ''}
-                      </button>
-                    );
-                  })}
-                </div>
+                <select
+                  className={inputCls + ' appearance-none'}
+                  id="cardId"
+                  value={cardId}
+                  onChange={e => setCardId(e.target.value)}
+                >
+                  <option value="">Nenhum</option>
+                  {cards.map(card => (
+                    <option key={card.id} value={card.id}>
+                      {card.name}{card.last_four ? ` •••• ${card.last_four}` : ''}
+                    </option>
+                  ))}
+                </select>
               </div>
             )}
 
             {/* Info de fatura */}
             {billingBaseDate && selectedCard && (
-              <div className="flex items-start gap-3 rounded-[13px] p-4" style={{ background: 'var(--accent-soft)' }}>
-                <Calendar className="w-4 h-4 shrink-0 mt-0.5" style={{ color: 'var(--accent)' }} />
-                <div className="text-sm" style={{ color: 'var(--text)' }}>
-                  <p className="font-medium">
+              <div className="flex items-start gap-3 bg-blue-50 border border-blue-100 rounded-xl p-4">
+                <Calendar className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
+                <div className="text-sm">
+                  <p className="text-blue-800 font-medium">
                     {isInstallmentSeries ? '1ª parcela' : 'Esta compra'} cairá na fatura de{' '}
                     <span className="font-bold capitalize">
                       {format(billingBaseDate, 'MMMM yyyy', { locale: ptBR })}
                     </span>
                   </p>
                   {selectedCard.due_day && (
-                    <p className="text-xs mt-0.5" style={{ color: 'var(--text-2)' }}>Vencimento: dia {selectedCard.due_day}</p>
+                    <p className="text-blue-600 text-xs mt-0.5">Vencimento: dia {selectedCard.due_day}</p>
                   )}
-                  <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>
+                  <p className="text-blue-500 text-xs mt-1">
                     Cartão fecha dia {selectedCard.closing_day} · Compra dia {new Date(date + 'T00:00:00').getDate()}
                   </p>
                 </div>
@@ -456,8 +423,8 @@ const ExpenseForm: React.FC = () => {
             {/* Parcelas — criação ou edição de série */}
             {showInstallmentsSection && (
               <div>
-                <div className="flex justify-between items-center mb-2.5">
-                  <label className="text-xs font-semibold" style={{ color: 'var(--text-2)' }}>
+                <div className="flex justify-between items-center mb-2">
+                  <label className="block text-sm font-medium text-gray-700" htmlFor="installments">
                     {isInstallmentSeries ? 'Número de Parcelas' : 'Parcelas'}
                   </label>
                   <button
@@ -466,8 +433,7 @@ const ExpenseForm: React.FC = () => {
                       setShowCustomInstallments(!showCustomInstallments);
                       if (!showCustomInstallments && installments === 1) setInstallments(2);
                     }}
-                    className="text-xs font-semibold flex items-center gap-1"
-                    style={{ color: 'var(--accent)' }}
+                    className="text-xs text-primary-600 hover:text-primary-700 font-medium flex items-center gap-1"
                   >
                     {showCustomInstallments ? (
                       <><X className="w-3 h-3" /> Cancelar</>
@@ -478,45 +444,29 @@ const ExpenseForm: React.FC = () => {
                 </div>
 
                 {showCustomInstallments ? (
-                  <div className="p-3 rounded-[13px] border" style={{ background: 'var(--surface-2)', borderColor: 'var(--border)' }}>
-                    <label className="block text-xs mb-1 font-medium" style={{ color: 'var(--text-3)' }}>Total de Parcelas</label>
+                  <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                    <label className="block text-xs text-gray-500 mb-1 font-medium">Total de Parcelas</label>
                     <input
                       type="number"
                       min="1"
                       value={installments}
                       onChange={e => setInstallments(Math.max(1, parseInt(e.target.value) || 1))}
-                      className="w-full px-3 py-2 rounded-lg border text-sm outline-none"
-                      style={{ background: 'var(--surface)', borderColor: 'var(--border-strong)', color: 'var(--text)' }}
+                      className="w-full px-3 py-2 rounded-md border border-gray-300 text-sm focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
                     />
                   </div>
                 ) : (
-                  <div className="flex flex-wrap gap-2">
-                    {INSTALLMENT_OPTIONS.map(num => {
-                      const active = installments === num;
-                      return (
-                        <button
-                          key={num}
-                          type="button"
-                          onClick={() => setInstallments(num)}
-                          className="flex-1 min-w-[60px] text-center py-2.5 rounded-xl text-sm font-semibold transition-colors"
-                          style={active
-                            ? { border: '1px solid var(--accent)', background: 'var(--accent-soft)', color: 'var(--accent)' }
-                            : { border: '1px solid var(--border)', background: 'var(--surface-2)', color: 'var(--text-2)' }}
-                        >
-                          {num === 1 ? 'À vista' : `${num}×`}
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-
-                {installments > 1 && amount && (
-                  <div className="flex items-center justify-between rounded-[13px] px-4 py-3 mt-3" style={{ background: 'var(--accent-soft)' }}>
-                    <span className="text-[13px] font-semibold" style={{ color: 'var(--text-2)' }}>Prévia por parcela</span>
-                    <span className="font-serif text-lg tabular-nums" style={{ color: 'var(--accent)' }}>
-                      {installments}× de {(parseCurrency(amount) / installments).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                    </span>
-                  </div>
+                  <select
+                    className={inputCls + ' appearance-none'}
+                    id="installments"
+                    value={installments}
+                    onChange={e => setInstallments(parseInt(e.target.value))}
+                  >
+                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 18, 24].map(num => (
+                      <option key={num} value={num}>
+                        {num === 1 ? 'À vista (1x)' : `${num}x`}
+                      </option>
+                    ))}
+                  </select>
                 )}
               </div>
             )}
@@ -526,18 +476,15 @@ const ExpenseForm: React.FC = () => {
               <button
                 type="button"
                 onClick={() => navigate('/')}
-                className="flex-1 px-4 py-3 font-semibold rounded-[14px] border transition-colors"
-                style={{ background: 'transparent', borderColor: 'var(--border-strong)', color: 'var(--text)' }}
+                className="flex-1 px-4 py-2.5 bg-white border border-gray-200 text-gray-700 font-medium rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-colors"
               >
                 Cancelar
               </button>
               <button
                 type="submit"
                 disabled={loading}
-                className="flex-1 px-4 py-3 font-bold rounded-[14px] transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2"
-                style={{ background: 'var(--accent)', color: 'var(--accent-ink)' }}
+                className="flex-1 px-4 py-2.5 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg shadow-sm hover:shadow transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed"
               >
-                {!loading && <Check className="w-4 h-4" />}
                 {loading
                   ? 'Salvando...'
                   : isInstallmentSeries

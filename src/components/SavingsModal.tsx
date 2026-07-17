@@ -3,8 +3,6 @@ import { useUserSettings } from '../context/UserSettingsContext';
 import { X, TrendingUp, AlertTriangle, Settings } from 'lucide-react';
 import { formatCurrency } from '../lib/format';
 
-const clampPct = (n: number) => Math.max(0, Math.min(100, n));
-
 interface SavingsModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -44,74 +42,72 @@ const SavingsModal: React.FC<SavingsModalProps> = ({ isOpen, onClose, totalExpen
 
   if (!isOpen) return null;
 
-  const gastoPct = salary ? Math.round((totalExpenses / salary) * 100) : 0;
-
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-end sm:items-center sm:justify-center sm:p-4">
-      <div
-        className="modal-bottom-sheet w-full max-h-[70vh] overflow-y-auto overflow-x-hidden rounded-t-[24px] sm:rounded-[24px] sm:max-w-md sm:max-h-[90vh] border"
-        style={{ background: 'var(--surface)', borderColor: 'var(--border)', boxShadow: 'var(--shadow)' }}
-      >
+      <div className="modal-bottom-sheet bg-white w-full max-h-[70vh] overflow-y-auto overflow-x-hidden rounded-t-2xl sm:rounded-2xl sm:max-w-md sm:max-h-[90vh] shadow-xl">
         {/* Drag handle (mobile only) */}
         <div className="sm:hidden flex justify-center pt-3 pb-1">
-          <div className="w-10 h-1 rounded-full" style={{ background: 'var(--border-strong)' }} />
+          <div className="w-10 h-1 bg-gray-200 rounded-full" />
         </div>
-        <div className="flex items-center justify-between p-5 border-b" style={{ borderColor: 'var(--border)' }}>
-          <span className="flex items-center gap-2.5 font-serif text-2xl" style={{ color: 'var(--text)' }}>
-            <TrendingUp className="w-5 h-5" style={{ color: isPositive ? 'var(--accent)' : 'var(--neg)' }} />
-            Quanto economizei?
-          </span>
+        <div className="flex items-center justify-between p-4 border-b border-gray-100">
+          <div className="flex items-center gap-2">
+            <div className={`p-2 rounded-lg ${isPositive ? 'bg-green-100' : 'bg-red-100'}`}>
+              {isPositive ? (
+                <TrendingUp className={`w-5 h-5 ${isPositive ? 'text-green-600' : 'text-red-600'}`} />
+              ) : (
+                <AlertTriangle className={`w-5 h-5 ${isPositive ? 'text-green-600' : 'text-red-600'}`} />
+              )}
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900">Quanto economizei?</h3>
+          </div>
           <button
             onClick={onClose}
-            className="w-9 h-9 flex items-center justify-center rounded-xl border transition-colors shrink-0"
-            style={{ borderColor: 'var(--border)', background: 'var(--surface-2)', color: 'var(--text-2)' }}
+            className="text-gray-400 hover:text-gray-500 hover:bg-gray-50 p-1 rounded-lg transition-colors"
           >
-            <X className="w-4 h-4" />
+            <X className="w-5 h-5" />
           </button>
         </div>
 
-        <div className="p-5 sm:p-6">
+        <div className="p-4 sm:p-8 text-center">
           {loading ? (
             <div className="flex justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2" style={{ borderColor: 'var(--accent)' }} />
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
             </div>
           ) : !salary ? (
-            <div className="flex flex-col items-center justify-center py-2 text-center">
-              <div className="p-4 rounded-full mb-4" style={{ background: 'var(--accent-soft)' }}>
-                <AlertTriangle className="w-10 h-10" style={{ color: 'var(--accent)' }} />
+            <div className="flex flex-col items-center justify-center py-2">
+              <div className="bg-yellow-100 p-4 rounded-full mb-4">
+                <AlertTriangle className="w-10 h-10 text-yellow-600" />
               </div>
-              <h4 className="font-serif text-xl mb-2" style={{ color: 'var(--text)' }}>Salário não definido</h4>
-              <p className="mb-2 max-w-xs mx-auto text-sm" style={{ color: 'var(--text-2)' }}>
+              <h4 className="text-xl font-bold text-gray-900 mb-2">Salário não definido</h4>
+              <p className="text-gray-500 mb-6 max-w-xs mx-auto">
                 Seu salário ainda não foi cadastrado. Clique no botão de configurações <Settings className="w-4 h-4 inline mx-1" /> no cabeçalho para configurar!
               </p>
             </div>
           ) : (
             <>
-              <div className="text-center rounded-[18px] p-6 mb-5" style={{ background: 'var(--accent-soft)' }}>
-                <p className="text-[11px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-2)' }}>Saldo do mês</p>
-                <p className="font-serif text-4xl sm:text-5xl leading-tight mt-1 tabular-nums" style={{ color: isPositive ? 'var(--accent)' : 'var(--neg)' }}>
-                  {formatCurrency(savings)}
+              <p className="text-gray-500 mb-2 font-medium">Seu resultado este mês</p>
+              <div className={`text-4xl font-bold mb-6 tracking-tight ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
+                {formatCurrency(savings)}
+              </div>
+              
+              <div className={`p-4 rounded-xl mb-6 ${isPositive ? 'bg-green-50 border border-green-100' : 'bg-red-50 border border-red-100'}`}>
+                <p className={`font-medium ${isPositive ? 'text-green-800' : 'text-red-800'}`}>
+                  {message}
                 </p>
-                <p className="text-sm mt-1.5" style={{ color: 'var(--text-2)' }}>{message}</p>
               </div>
 
-              <div className="mb-3">
-                <div className="flex justify-between text-[13px] mb-1.5">
-                  <span className="font-semibold" style={{ color: 'var(--text-2)' }}>Salário</span>
-                  <span className="font-bold tabular-nums" style={{ color: 'var(--text)' }}>{formatCurrency(salary)}</span>
+              <div className="grid grid-cols-2 gap-4 text-left bg-gray-50 p-4 rounded-xl border border-gray-100">
+                <div>
+                  <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">Salário</p>
+                  <p className="text-gray-900 font-semibold">
+                    {formatCurrency(salary || 0)}
+                  </p>
                 </div>
-                <div className="h-2.5 rounded-full" style={{ background: 'var(--surface-2)' }}>
-                  <div className="h-2.5 rounded-full" style={{ background: 'var(--accent)', width: '100%' }} />
-                </div>
-              </div>
-
-              <div>
-                <div className="flex justify-between text-[13px] mb-1.5">
-                  <span className="font-semibold" style={{ color: 'var(--text-2)' }}>Gastos ({gastoPct}%)</span>
-                  <span className="font-bold tabular-nums" style={{ color: 'var(--text)' }}>{formatCurrency(totalExpenses)}</span>
-                </div>
-                <div className="h-2.5 rounded-full" style={{ background: 'var(--surface-2)' }}>
-                  <div className="h-2.5 rounded-full" style={{ background: 'var(--neg)', width: `${clampPct(gastoPct)}%` }} />
+                <div>
+                  <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">Gastos</p>
+                  <p className="text-red-600 font-semibold">
+                    {totalExpenses.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                  </p>
                 </div>
               </div>
             </>

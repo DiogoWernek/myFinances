@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useUserSettings } from '../context/UserSettingsContext';
-import { X, Save, Loader2, CreditCard, Calendar } from 'lucide-react';
+import { X, Save, Loader2 } from 'lucide-react';
 import { formatCurrencyInput, parseCurrency } from '../lib/format';
 
 interface SettingsModalProps {
@@ -43,81 +43,53 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div
-        className="rounded-[24px] w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200 border"
-        style={{ background: 'var(--surface)', borderColor: 'var(--border)', boxShadow: 'var(--shadow)' }}
-      >
-        <div className="flex items-center justify-between p-5 border-b" style={{ borderColor: 'var(--border)' }}>
-          <h3 className="font-serif text-2xl" style={{ color: 'var(--text)' }}>Configurações</h3>
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
+        <div className="flex items-center justify-between p-4 border-b border-gray-100">
+          <h3 className="text-lg font-semibold text-gray-900">Configurações</h3>
           <button
             onClick={onClose}
-            className="w-9 h-9 flex items-center justify-center rounded-xl border transition-colors"
-            style={{ borderColor: 'var(--border)', background: 'var(--surface-2)', color: 'var(--text-2)' }}
+            className="text-gray-400 hover:text-gray-500 hover:bg-gray-50 p-1 rounded-lg transition-colors"
           >
-            <X className="w-4 h-4" />
+            <X className="w-5 h-5" />
           </button>
         </div>
 
         <form onSubmit={handleSave} className="p-6">
-          <div>
-            <label htmlFor="salary" className="block text-xs font-semibold mb-2" style={{ color: 'var(--text-2)' }}>
-              Salário mensal
-            </label>
-            <div className="flex items-center gap-2.5 rounded-[14px] border px-4 py-3" style={{ background: 'var(--surface-2)', borderColor: 'var(--border-strong)' }}>
-              <span className="font-serif text-2xl shrink-0" style={{ color: 'var(--text-3)' }}>R$</span>
-              <input
-                type="text"
-                id="salary"
-                required
-                value={salary}
-                onChange={(e) => setSalary(formatCurrencyInput(e.target.value))}
-                className="w-full min-w-0 bg-transparent outline-none font-serif text-2xl tabular-nums"
-                style={{ color: 'var(--text)' }}
-                placeholder="0,00"
-              />
-            </div>
-            <p className="mt-2 text-xs" style={{ color: 'var(--text-3)' }}>
-              Usado para calcular seu saldo do mês.
-            </p>
-          </div>
-
-          <div className="flex flex-col gap-2 my-6">
-            <div
-              className="flex items-center justify-between px-4 py-3.5 rounded-[13px] border opacity-60"
-              style={{ borderColor: 'var(--border)', background: 'var(--surface-2)' }}
-            >
-              <span className="flex items-center gap-2.5 text-sm font-semibold" style={{ color: 'var(--text)' }}>
-                <CreditCard className="w-4 h-4" />
-                Moeda &amp; formato
-              </span>
-              <span className="text-[11px] font-bold px-2 py-1 rounded-lg" style={{ color: 'var(--text-3)', background: 'var(--bg-2)' }}>Em breve</span>
-            </div>
-            <div
-              className="flex items-center justify-between px-4 py-3.5 rounded-[13px] border opacity-60"
-              style={{ borderColor: 'var(--border)', background: 'var(--surface-2)' }}
-            >
-              <span className="flex items-center gap-2.5 text-sm font-semibold" style={{ color: 'var(--text)' }}>
-                <Calendar className="w-4 h-4" />
-                Lembretes de fatura
-              </span>
-              <span className="text-[11px] font-bold px-2 py-1 rounded-lg" style={{ color: 'var(--text-3)', background: 'var(--bg-2)' }}>Em breve</span>
+          <div className="space-y-4">
+            <div>
+              <label htmlFor="salary" className="block text-sm font-medium text-gray-700 mb-1">
+                Salário Mensal
+              </label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">R$</span>
+                <input
+                  type="text"
+                  id="salary"
+                  required
+                  value={salary}
+                  onChange={(e) => setSalary(formatCurrencyInput(e.target.value))}
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
+                  placeholder="0,00"
+                />
+              </div>
+              <p className="mt-1 text-xs text-gray-500">
+                Este valor será usado para calcular seu saldo restante.
+              </p>
             </div>
           </div>
 
-          <div className="flex justify-end gap-3">
+          <div className="mt-6 flex justify-end gap-3">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2.5 text-sm font-semibold rounded-xl border transition-colors"
-              style={{ background: 'transparent', borderColor: 'var(--border-strong)', color: 'var(--text)' }}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={saving || contextLoading}
-              className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-bold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-              style={{ background: 'var(--accent)', color: 'var(--accent-ink)' }}
+              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-primary-600 border border-transparent rounded-lg hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {saving ? (
                 <>

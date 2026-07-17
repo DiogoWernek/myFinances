@@ -9,8 +9,8 @@ interface CardsTabProps {
 }
 
 const PRESET_COLORS = [
-  '#8B2FD6', '#FF7A00', '#3A3A3C', '#00E0A4',
-  '#5B8DEF', '#FF6B8A', '#2DC6C6', '#F4B841',
+  '#6366f1', '#22c55e', '#3b82f6', '#f97316',
+  '#ec4899', '#ef4444', '#06b6d4', '#eab308',
 ];
 
 const CardsTab: React.FC<CardsTabProps> = ({ expenses }) => {
@@ -69,7 +69,7 @@ const CardsTab: React.FC<CardsTabProps> = ({ expenses }) => {
 
   const dayInput = (label: string, value: string, onChange: (v: string) => void, placeholder: string) => (
     <div>
-      <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text-2)' }}>{label}</label>
+      <label className="block text-sm font-medium text-gray-700 mb-1.5">{label}</label>
       <input
         type="number"
         min="1"
@@ -77,8 +77,7 @@ const CardsTab: React.FC<CardsTabProps> = ({ expenses }) => {
         placeholder={placeholder}
         value={value}
         onChange={e => onChange(e.target.value.replace(/\D/g, '').slice(0, 2))}
-        className="w-full px-4 py-2.5 rounded-xl border outline-none transition-colors"
-        style={{ background: 'var(--surface-2)', borderColor: 'var(--border-strong)', color: 'var(--text)' }}
+        className="w-full px-4 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all"
       />
     </div>
   );
@@ -86,25 +85,24 @@ const CardsTab: React.FC<CardsTabProps> = ({ expenses }) => {
   if (loading) {
     return (
       <div className="flex justify-center py-12">
-        <Loader2 className="w-6 h-6 animate-spin" style={{ color: 'var(--accent)' }} />
+        <Loader2 className="w-6 h-6 animate-spin text-primary-600" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       {/* Cards list */}
       {cards.length === 0 && !showAddForm ? (
-        <div className="text-center py-16 rounded-[22px] border border-dashed" style={{ borderColor: 'var(--border-strong)' }}>
-          <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4" style={{ background: 'var(--surface-2)' }}>
-            <CreditCard className="w-7 h-7" style={{ color: 'var(--text-3)' }} />
+        <div className="text-center py-16 bg-white rounded-2xl border border-dashed border-gray-200">
+          <div className="bg-gray-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+            <CreditCard className="w-8 h-8 text-gray-400" />
           </div>
-          <p className="font-serif text-xl" style={{ color: 'var(--text)' }}>Nenhum cartão cadastrado</p>
-          <p className="text-sm mb-6 mt-1" style={{ color: 'var(--text-3)' }}>Adicione seus cartões para organizar seus gastos.</p>
+          <p className="text-gray-900 font-medium mb-1">Nenhum cartão cadastrado</p>
+          <p className="text-gray-500 text-sm mb-6">Adicione seus cartões para organizar seus gastos.</p>
           <button
             onClick={() => setShowAddForm(true)}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full font-bold transition-all active:scale-95"
-            style={{ background: 'var(--accent)', color: 'var(--accent-ink)' }}
+            className="inline-flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white px-5 py-2.5 rounded-full font-medium shadow-sm transition-all active:scale-95"
           >
             <Plus className="w-4 h-4" />
             Adicionar Cartão
@@ -117,51 +115,56 @@ const CardsTab: React.FC<CardsTabProps> = ({ expenses }) => {
             return (
               <div
                 key={card.id}
-                className="rounded-[20px] border p-4 flex items-center gap-4"
-                style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}
+                className="bg-white rounded-xl border border-gray-100 flex items-stretch overflow-hidden"
               >
-                <div
-                  className="w-[58px] h-[38px] rounded-lg shrink-0 flex items-end px-1.5 pb-1.5"
-                  style={{ backgroundColor: card.color }}
-                >
-                  <span className="w-5 h-3 rounded-sm" style={{ background: 'rgba(255,255,255,.4)' }} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-bold text-[15px] truncate" style={{ color: 'var(--text)' }}>
-                    {card.name}
-                    {card.last_four && (
-                      <span className="font-medium ml-1.5" style={{ color: 'var(--text-3)' }}>•••• {card.last_four}</span>
-                    )}
-                  </p>
-                  <p className="text-sm mt-1" style={{ color: 'var(--text-3)' }}>
-                    {stats.count > 0
-                      ? `${formatCurrency(stats.amount)} · ${stats.count} transaç${stats.count === 1 ? 'ão' : 'ões'} este mês`
-                      : 'Nenhum gasto este mês'}
-                  </p>
-                  {(card.closing_day || card.due_day) && (
-                    <div className="flex flex-wrap gap-1.5 mt-2">
-                      {card.closing_day && (
-                        <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-lg border" style={{ color: 'var(--text-2)', background: 'var(--surface-2)', borderColor: 'var(--border)' }}>
-                          <Calendar className="w-3 h-3" />
-                          Fecha dia {card.closing_day}
-                        </span>
-                      )}
-                      {card.due_day && (
-                        <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-lg border" style={{ color: 'var(--text-2)', background: 'var(--surface-2)', borderColor: 'var(--border)' }}>
-                          <Clock className="w-3 h-3" />
-                          Vence dia {card.due_day}
-                        </span>
+                {/* Left color strip */}
+                <div className="w-1.5 shrink-0" style={{ backgroundColor: card.color }} />
+
+                <div className="flex items-center justify-between gap-4 flex-1 p-4 min-w-0">
+                  <div className="flex items-start gap-3 min-w-0 flex-1">
+                    <div
+                      className="w-10 h-10 rounded-xl shrink-0 flex items-center justify-center mt-0.5"
+                      style={{ backgroundColor: card.color + '22' }}
+                    >
+                      <CreditCard className="w-5 h-5" style={{ color: card.color }} />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="font-semibold text-gray-900 truncate">
+                        {card.name}
+                        {card.last_four && (
+                          <span className="text-gray-400 font-normal ml-1.5">•••• {card.last_four}</span>
+                        )}
+                      </p>
+                      <p className="text-sm text-gray-500 mt-0.5">
+                        {stats.count > 0
+                          ? `${formatCurrency(stats.amount)} · ${stats.count} transaç${stats.count === 1 ? 'ão' : 'ões'} este mês`
+                          : 'Nenhum gasto este mês'}
+                      </p>
+                      {(card.closing_day || card.due_day) && (
+                        <div className="flex flex-wrap gap-2 mt-1.5">
+                          {card.closing_day && (
+                            <span className="inline-flex items-center gap-1 text-xs bg-orange-50 text-orange-700 border border-orange-100 px-2 py-0.5 rounded-full">
+                              <Calendar className="w-3 h-3" />
+                              Fecha dia {card.closing_day}
+                            </span>
+                          )}
+                          {card.due_day && (
+                            <span className="inline-flex items-center gap-1 text-xs bg-blue-50 text-blue-700 border border-blue-100 px-2 py-0.5 rounded-full">
+                              <Clock className="w-3 h-3" />
+                              Vence dia {card.due_day}
+                            </span>
+                          )}
+                        </div>
                       )}
                     </div>
-                  )}
+                  </div>
+                  <button
+                    onClick={() => handleDelete(card.id, card.name)}
+                    className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors shrink-0"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
                 </div>
-                <button
-                  onClick={() => handleDelete(card.id, card.name)}
-                  className="w-9 h-9 flex items-center justify-center rounded-xl border transition-colors shrink-0"
-                  style={{ borderColor: 'var(--border)', color: 'var(--text-3)' }}
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
               </div>
             );
           })}
@@ -169,8 +172,7 @@ const CardsTab: React.FC<CardsTabProps> = ({ expenses }) => {
           {!showAddForm && (
             <button
               onClick={() => setShowAddForm(true)}
-              className="w-full flex items-center justify-center gap-2 py-3 border-2 border-dashed rounded-xl font-semibold transition-all"
-              style={{ borderColor: 'var(--border)', color: 'var(--text-2)' }}
+              className="w-full flex items-center justify-center gap-2 py-3 border-2 border-dashed border-gray-200 rounded-xl text-gray-500 hover:text-primary-600 hover:border-primary-300 hover:bg-primary-50/50 transition-all font-medium"
             >
               <Plus className="w-4 h-4" />
               Adicionar Cartão
@@ -181,11 +183,11 @@ const CardsTab: React.FC<CardsTabProps> = ({ expenses }) => {
 
       {/* Add card form */}
       {showAddForm && (
-        <form onSubmit={handleAdd} className="rounded-[20px] p-5 border space-y-4" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
-          <h4 className="font-serif text-xl" style={{ color: 'var(--text)' }}>Novo cartão</h4>
+        <form onSubmit={handleAdd} className="bg-white rounded-xl p-5 border border-primary-200 shadow-sm space-y-4">
+          <h4 className="font-semibold text-gray-900">Novo Cartão</h4>
 
           <div>
-            <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text-2)' }}>Nome do cartão</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">Nome do cartão</label>
             <input
               type="text"
               placeholder="Ex: Nubank, Itaú Débito..."
@@ -193,21 +195,19 @@ const CardsTab: React.FC<CardsTabProps> = ({ expenses }) => {
               onChange={e => setNewName(e.target.value)}
               required
               autoFocus
-              className="w-full px-4 py-2.5 rounded-xl border outline-none transition-colors"
-              style={{ background: 'var(--surface-2)', borderColor: 'var(--border-strong)', color: 'var(--text)' }}
+              className="w-full px-4 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text-2)' }}>Últimos 4 dígitos (opcional)</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">Últimos 4 dígitos (opcional)</label>
             <input
               type="text"
               placeholder="1234"
               maxLength={4}
               value={newLastFour}
               onChange={e => setNewLastFour(e.target.value.replace(/\D/g, ''))}
-              className="w-full px-4 py-2.5 rounded-xl border outline-none transition-colors tabular-nums"
-              style={{ background: 'var(--surface-2)', borderColor: 'var(--border-strong)', color: 'var(--text)' }}
+              className="w-full px-4 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all"
             />
           </div>
 
@@ -216,23 +216,20 @@ const CardsTab: React.FC<CardsTabProps> = ({ expenses }) => {
             {dayInput('Dia de vencimento (opcional)', newDueDay, setNewDueDay, 'Ex: 15')}
           </div>
 
-          <p className="text-xs -mt-1" style={{ color: 'var(--text-3)' }}>
+          <p className="text-xs text-gray-400 -mt-1">
             O dia de fechamento é usado para calcular automaticamente em qual fatura cada compra cai.
           </p>
 
           <div>
-            <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-2)' }}>Cor</label>
-            <div className="flex gap-2.5 flex-wrap">
+            <label className="block text-sm font-medium text-gray-700 mb-2">Cor</label>
+            <div className="flex gap-2 flex-wrap">
               {PRESET_COLORS.map(color => (
                 <button
                   key={color}
                   type="button"
                   onClick={() => setNewColor(color)}
-                  className="w-[30px] h-[30px] rounded-lg transition-transform hover:scale-110"
-                  style={{
-                    backgroundColor: color,
-                    boxShadow: newColor === color ? '0 0 0 2px var(--surface), 0 0 0 4px var(--accent)' : 'none',
-                  }}
+                  className={`w-8 h-8 rounded-full transition-transform ${newColor === color ? 'scale-125 ring-2 ring-offset-2 ring-gray-400' : 'hover:scale-110'}`}
+                  style={{ backgroundColor: color }}
                 />
               ))}
             </div>
@@ -242,16 +239,14 @@ const CardsTab: React.FC<CardsTabProps> = ({ expenses }) => {
             <button
               type="button"
               onClick={resetForm}
-              className="flex-1 px-4 py-2.5 font-semibold rounded-xl border transition-colors"
-              style={{ background: 'transparent', borderColor: 'var(--border-strong)', color: 'var(--text)' }}
+              className="flex-1 px-4 py-2.5 bg-white border border-gray-200 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={adding || !newName.trim()}
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 font-bold rounded-xl transition-all disabled:opacity-60"
-              style={{ background: 'var(--accent)', color: 'var(--accent-ink)' }}
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg shadow-sm transition-all disabled:opacity-60"
             >
               {adding ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
               {adding ? 'Adicionando...' : 'Adicionar'}
