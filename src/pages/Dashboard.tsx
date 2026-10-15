@@ -11,13 +11,14 @@ import { Link } from 'react-router-dom';
 import {
   Plus, Edit2, Trash2, LogOut, ChevronLeft, ChevronRight,
   TrendingDown, PieChart, Settings, Wallet, RefreshCcw,
-  Search, Filter, CreditCard, RefreshCw,
+  Search, Filter, CreditCard, RefreshCw, PiggyBank,
 } from 'lucide-react';
 import { PieChart as RePieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 import { COLORS, CATEGORIES, PAYMENT_METHODS } from '../constants';
 import { DisplayExpense } from '../types';
 import SettingsModal from '../components/SettingsModal';
 import SavingsModal from '../components/SavingsModal';
+import InvestmentModal from '../components/InvestmentModal';
 import ExpenseDetailModal from '../components/ExpenseDetailModal';
 import CardsTab from '../components/CardsTab';
 import FixedExpensesTab from '../components/FixedExpensesTab';
@@ -31,6 +32,7 @@ const Dashboard: React.FC = () => {
 
   const [isSettingsOpen, setIsSettingsOpen] = React.useState(false);
   const [isSavingsOpen, setIsSavingsOpen] = React.useState(false);
+  const [isInvestOpen, setIsInvestOpen] = React.useState(false);
   const [selectedExpense, setSelectedExpense] = React.useState<DisplayExpense | null>(null);
   const [activeTab, setActiveTab] = React.useState<ActiveTab>('transactions');
   const [selectedCardId, setSelectedCardId] = React.useState<string | null>(null);
@@ -195,6 +197,13 @@ const Dashboard: React.FC = () => {
             <h1 className="text-xl font-bold text-gray-900 tracking-tight">myFinance</h1>
           </div>
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => setIsInvestOpen(true)}
+              className="text-sm font-medium text-gray-500 hover:text-gray-900 flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              <PiggyBank className="w-4 h-4" />
+              <span className="hidden sm:inline">Investir</span>
+            </button>
             <button
               onClick={() => setIsSettingsOpen(true)}
               className="text-sm font-medium text-gray-500 hover:text-gray-900 flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors"
@@ -517,6 +526,7 @@ const Dashboard: React.FC = () => {
       </main>
 
       <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
+      <InvestmentModal isOpen={isInvestOpen} onClose={() => setIsInvestOpen(false)} />
 
       <SavingsModal
         isOpen={isSavingsOpen}
