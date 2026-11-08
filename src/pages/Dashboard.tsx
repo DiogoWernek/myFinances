@@ -11,8 +11,9 @@ import { Link } from 'react-router-dom';
 import {
   Plus, Edit2, Trash2, LogOut, ChevronLeft, ChevronRight,
   TrendingDown, PieChart, Settings, Wallet, RefreshCcw,
-  Search, Filter, CreditCard, RefreshCw, PiggyBank,
+  Search, Filter, CreditCard, RefreshCw, PiggyBank, Moon, Sun,
 } from 'lucide-react';
+import { useTheme } from '../lib/theme';
 import { PieChart as RePieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 import { COLORS, CATEGORIES, PAYMENT_METHODS } from '../constants';
 import { DisplayExpense } from '../types';
@@ -29,6 +30,7 @@ const Dashboard: React.FC = () => {
   const { signOut } = useAuth();
   const { cards } = useCards();
   const { fixedExpenses } = useFixedExpenses();
+  const { theme, toggle: toggleTheme } = useTheme();
 
   const [isSettingsOpen, setIsSettingsOpen] = React.useState(false);
   const [isSavingsOpen, setIsSavingsOpen] = React.useState(false);
@@ -197,6 +199,13 @@ const Dashboard: React.FC = () => {
             <h1 className="text-xl font-bold text-gray-900 tracking-tight">myFinance</h1>
           </div>
           <div className="flex items-center gap-2">
+            <button
+              onClick={toggleTheme}
+              title={theme === 'dark' ? 'Modo claro' : 'Modo escuro'}
+              className="text-sm font-medium text-gray-500 hover:text-gray-900 flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            </button>
             <button
               onClick={() => setIsInvestOpen(true)}
               className="text-sm font-medium text-gray-500 hover:text-gray-900 flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors"
